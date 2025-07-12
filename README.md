@@ -34,7 +34,7 @@ Professional calculator for analyzing the profitability of advertising campaigns
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/acos-forecast-calculator.git
+git clone https://github.com/Kevinus31/acos-forecast-calculator.git
 cd acos-forecast-calculator
 ```
 
@@ -189,7 +189,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🐛 Issues
 
 If you encounter any issues:
-1. Check the [Issues](https://github.com/yourusername/acos-forecast-calculator/issues) page
+1. Check the [Issues](https://github.com/Kevinus31/acos-forecast-calculator/issues) page
 2. Review the deployment logs
 3. Test locally first
 4. Submit a detailed bug report
@@ -203,4 +203,4 @@ For support and questions:
 
 ---
 
-**Built with ❤️ for marketing professionals and campaign managers** 
+**Built with ❤️ for marketing professionals and campaign managers**
