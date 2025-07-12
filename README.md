@@ -1,205 +1,206 @@
-# ACOS Forecast Calculator
+# 🎯 ACOS Forecast Calculator
 
-Aplikacja webowa do obliczania wskaźników ACOS, ROI i analizy rentowności kampanii reklamowych.
+Professional calculator for analyzing the profitability of advertising campaigns with NBP API integration and real-time currency conversion.
 
-## Funkcjonalności
+## 🚀 Features
 
-- ✅ Obliczanie wskaźników ACOS (Advertising Cost of Sales)
-- ✅ Kalkulacja ROI (Return on Investment)
-- ✅ Analiza rentowności kampanii
-- ✅ Określanie break-even ACOS
-- ✅ Ostrzeżenia o nierentownych kampaniach
-- ✅ Responsywny interfejs użytkownika
-- ✅ Szablon uploadu plików CSV
-- ✅ Wszystkie komunikaty w języku polskim
+- **ACOS Calculator**: Calculate profitability indicators of advertising campaigns
+- **Campaign Forecasting**: Advanced prediction of campaign results based on metrics
+- **Excel Export**: Generate detailed reports in Excel format
+- **NBP Integration**: Automatic EUR/PLN currency conversion using National Bank of Poland API
+- **Real-time Calculations**: Interactive sliders with instant results
+- **Responsive Design**: Modern UI optimized for all devices
 
-## Technologie
+## 📊 Key Metrics
 
-- **Backend**: FastAPI (Python 3.11+)
-- **Frontend**: Jinja2 + HTML + CSS
-- **Deployment**: Docker + Railway
-- **Styling**: CSS Grid + Flexbox (responsywny)
+- **ACOS** (Advertising Cost of Sales): Campaign profitability indicator
+- **ROI** (Return on Investment): Investment return calculation
+- **Projected Sales**: Forecasted revenue based on campaign metrics
+- **Projected Spend**: Estimated advertising costs
+- **Break-even Analysis**: Profitability threshold calculation
 
-## Struktura projektu
+## 🛠️ Technology Stack
 
-```
-/
-├── app/
-│   ├── main.py              # Główna aplikacja FastAPI
-│   ├── utils.py             # Logika obliczeń ACOS
-│   ├── templates/
-│   │   └── index.html       # Szablon HTML
-│   └── static/
-│       └── style.css        # Style CSS
-├── Dockerfile               # Kontener Docker
-├── requirements.txt         # Zależności Python
-└── README.md               # Dokumentacja
-```
+- **Backend**: FastAPI (Python 3.9+)
+- **Frontend**: HTML5, CSS3, JavaScript
+- **Templating**: Jinja2
+- **Excel Export**: OpenPyXL
+- **Currency API**: NBP (National Bank of Poland)
+- **Deployment**: Railway.app, Docker
 
-## Uruchomienie lokalne
+## 🚀 Quick Start
 
-### Wymagania
-- Python 3.11+
-- pip
+### Local Development
 
-### Instalacja
-
-1. **Sklonuj repozytorium**:
+1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/acos-forecast-calculator.git
 cd acos-forecast-calculator
 ```
 
-2. **Utwórz wirtualne środowisko**:
+2. Install dependencies:
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# lub
-venv\Scripts\activate     # Windows
+pip3 install -r requirements.txt
 ```
 
-3. **Zainstaluj zależności**:
+3. Run the application:
 ```bash
-pip install -r requirements.txt
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-4. **Uruchom aplikację**:
+4. Open in browser: `http://localhost:8000`
+
+### Quick Start Scripts
+
+- **Basic start**: `./start_app.sh`
+- **F5 restart**: `python3 f5_restart.py`
+
+## 🌐 Live Demo
+
+The application is deployed on Railway.app: [Live Demo](https://acos-forecast-calculator-production.up.railway.app)
+
+## 📖 Usage
+
+### Basic ACOS Calculation
+1. Enter projected sales (PLN)
+2. Enter advertising spend (PLN)
+3. Set gross margin (%)
+4. Click "Calculate ACOS"
+
+### Advanced Forecasting
+1. Choose "Manual Inputs" method
+2. Set campaign parameters using sliders:
+   - Gross Margin (%)
+   - Target AOV (EUR)
+   - Target CTR (%)
+   - Target CPC (EUR)
+   - Target CVR (%)
+   - Impressions
+3. Results update in real-time
+
+### Excel Export
+- Fill in the forecast parameters
+- Click "Export Results"
+- Download generated Excel report
+
+## 🔧 Configuration
+
+### Environment Variables
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+PORT=8000                    # Application port
+PYTHONPATH=/code/app        # Python path for imports
 ```
 
-5. **Otwórz w przeglądarce**:
+### Railway Deployment
+The application is configured for Railway deployment with:
+- `Dockerfile` for containerization
+- `railway.json` for deployment configuration
+- Automatic HTTPS and custom domain support
+
+## 📁 Project Structure
+
 ```
-http://localhost:8000
+acos-forecast-calculator/
+├── app/
+│   ├── main.py              # FastAPI application
+│   ├── utils.py             # Calculation utilities
+│   ├── static/              # CSS, JS, images
+│   └── templates/           # HTML templates
+├── Dockerfile               # Docker configuration
+├── railway.json             # Railway deployment config
+├── requirements.txt         # Python dependencies
+├── start_app.sh            # Local start script
+├── f5_restart.py           # F5 restart utility
+└── README.md               # This file
 ```
 
-## Uruchomienie z Docker
+## 🧮 Calculation Formulas
 
-### Wymagania
-- Docker
-- Docker Compose (opcjonalnie)
+### ACOS Formula
+```
+ACOS = (Ad Spend / Ad Sales) × 100%
+```
 
-### Instrukcje
+### ROI Formula
+```
+ROI = ((Revenue - Cost) / Cost) × 100%
+```
 
-1. **Zbuduj obraz Docker**:
+### Forecast Calculations
+```
+Clicks = Impressions × CTR%
+Orders = Clicks × CVR%
+Ad Spend = Clicks × CPC
+Ad Sales = Orders × AOV
+```
+
+## 🔄 Currency Conversion
+
+The application uses NBP (National Bank of Poland) API for real-time EUR/PLN conversion:
+- Automatic rate fetching with 24-hour cache
+- Fallback rate: 4.30 PLN/EUR
+- All calculations support both EUR and PLN display
+
+## 🚀 Deployment
+
+### Railway.app (Recommended)
+1. Fork this repository
+2. Connect to Railway.app
+3. Deploy automatically with `railway.json`
+
+### Docker
 ```bash
 docker build -t acos-calculator .
-```
-
-2. **Uruchom kontener**:
-```bash
 docker run -p 8000:8000 acos-calculator
 ```
 
-3. **Otwórz w przeglądarce**:
-```
-http://localhost:8000
-```
-
-## Deployment na Railway
-
-### Wymagania
-- Konto Railway (https://railway.app)
-- Repozytorium GitHub z kodem
-
-### Instrukcje
-
-1. **Przygotuj repozytorium**:
-   - Wrzuć kod do repozytorium GitHub
-   - Upewnij się, że wszystkie pliki są commitowane
-
-2. **Połącz z Railway**:
-   - Zaloguj się na Railway
-   - Kliknij "New Project"
-   - Wybierz "Deploy from GitHub repo"
-   - Wybierz swoje repozytorium
-
-3. **Konfiguracja**:
-   - Railway automatycznie wykryje Dockerfile
-   - Ustawi port 8000
-   - Zbuduje i wdroży aplikację
-
-4. **Dostęp**:
-   - Po udanym deployment otrzymasz URL
-   - Aplikacja będzie dostępna pod adresem: `https://twoja-aplikacja.railway.app`
-
-### Konfiguracja zmiennych środowiskowych (opcjonalnie)
-
-Jeśli chcesz dodać dodatkowe konfiguracje:
-
+### Manual
 ```bash
-# W panelu Railway -> Variables
-PORT=8000
-PYTHONPATH=/code/app
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-## Użytkowanie
+## 🛡️ Security
 
-### Formularz obliczeń
+- Input validation for all user data
+- HTTPS enforcement in production
+- Environment variable protection
+- No sensitive data in logs
 
-1. **Wprowadź dane**:
-   - Prognozowana sprzedaż (PLN)
-   - Prognozowane wydatki na reklamę (PLN)
-   - Marża brutto (%)
+## 📈 Performance
 
-2. **Kliknij "Oblicz ACOS"**
+- Async FastAPI for high performance
+- Efficient currency rate caching
+- Optimized database-free architecture
+- CDN-ready static files
 
-3. **Analizuj wyniki**:
-   - **ACOS**: Koszt reklamy do sprzedaży
-   - **ROI**: Zwrot z inwestycji
-   - **Zysk**: Przewidywany zysk
-   - **Break-even ACOS**: Punkt rentowności
+## 🤝 Contributing
 
-### Interpretacja wyników
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-- **🟢 Rentowna kampania**: ACOS ≤ Marża brutto
-- **🔴 Nierentowna kampania**: ACOS > Marża brutto
-- **Break-even ACOS**: Maksymalny ACOS dla rentowności
+## 📄 License
 
-### Upload plików
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-Funkcja w trakcie rozwoju. Szablon przygotowany do:
-- Uploadu plików CSV
-- Przetwarzania danych z pliku
-- Automatycznego obliczania wskaźników
+## 🐛 Issues
 
-## Rozwój aplikacji
+If you encounter any issues:
+1. Check the [Issues](https://github.com/yourusername/acos-forecast-calculator/issues) page
+2. Review the deployment logs
+3. Test locally first
+4. Submit a detailed bug report
 
-### Dodanie nowych funkcji
+## 📞 Support
 
-1. **Edytuj logikę**: `app/utils.py`
-2. **Dodaj endpointy**: `app/main.py`
-3. **Zaktualizuj UI**: `app/templates/index.html`
-4. **Dodaj style**: `app/static/style.css`
-
-### Przykłady rozbudowy
-
-- Wykresy i wizualizacje
-- Analiza wielokanałowa
-- Eksport wyników do PDF
-- Integracja z API reklamowymi
-- Baza danych historii obliczeń
-
-## API Endpoints
-
-- `GET /` - Strona główna
-- `POST /calculate` - Obliczanie ACOS
-- `POST /upload` - Upload pliku CSV
-- `GET /health` - Status aplikacji
-
-## Wsparcie
-
-W przypadku problemów:
-1. Sprawdź logi aplikacji
-2. Zweryfikuj format danych wejściowych
-3. Upewnij się, że wszystkie zależności są zainstalowane
-
-## Licencja
-
-Projekt stworzony na potrzeby analizy kampanii reklamowych.
+For support and questions:
+- Create an issue on GitHub
+- Check the documentation
+- Review the deployment guide
 
 ---
 
-**Autor**: ACOS Forecast Calculator Team  
-**Wersja**: 1.0.0  
-**Data**: 2024 
+**Built with ❤️ for marketing professionals and campaign managers** 

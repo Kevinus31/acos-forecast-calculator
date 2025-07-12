@@ -2,6 +2,15 @@ from typing import Dict, Any, Optional
 import requests
 import json
 from datetime import datetime, timedelta
+from io import BytesIO
+import openpyxl
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.drawing.image import Image
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.chart import LineChart, Reference
+import os
 
 # Cache dla kursu EUR (ważny przez 1 dzień)
 _eur_rate_cache: Dict[str, Any] = {"rate": None, "timestamp": None}
@@ -95,9 +104,13 @@ def calculate_acos(sales: float, spend: float, margin: float) -> Dict[str, Any]:
     # Obliczenie ROI (Return on Investment)
     roi = ((sales - spend) / spend) * 100 if spend > 0 else 0
     
-    # Obliczenie zysku
-    profit_per_sale = (sales * margin / 100) - spend
-    total_profit = profit_per_sale
+    # Poprawione obliczenie zysku
+    # Zysk brutto ze sprzedaży
+    gross_profit = sales * (margin / 100)
+    # Zysk całkowity po odjęciu kosztów reklamy
+    total_profit = gross_profit - spend
+    # Profit per sale - zakładając że każda sprzedaż to jedno zamówienie
+    profit_per_sale = total_profit  # Dla podstawowego kalkulatora
     
     # Break-even ACOS (punkt rentowności)
     break_even_acos = margin
@@ -119,6 +132,7 @@ def calculate_acos(sales: float, spend: float, margin: float) -> Dict[str, Any]:
         "acos": round(acos, 2),
         "roi": round(roi, 2),
         "profit": round(total_profit, 2),
+        "profit_per_sale": round(profit_per_sale, 2),
         "break_even_acos": round(break_even_acos, 2),
         "is_profitable": is_profitable,
         "profitability_message": profitability_message,
@@ -169,10 +183,10 @@ def calculate_forecast_from_metrics(
     # ROAS = Revenue / Ad Spend
     roas = ad_sales / ad_spend if ad_spend > 0 else 0
     
-    # Obliczenie zysku - Profit per Sale uwzględnia marżę brutto
+    # Poprawione obliczenie zysku
     gross_profit = ad_sales * (gross_margin / 100)  # Zysk brutto ze sprzedaży
     total_profit = gross_profit - ad_spend  # Zysk całkowity po odjęciu kosztów reklamy
-    profit_per_sale = total_profit / orders if orders > 0 else 0
+    profit_per_sale = total_profit / orders if orders > 0 else 0  # Zysk na sprzedaż
     
     # Break-even ACOS = marża brutto
     break_even_acos = gross_margin
@@ -248,6 +262,238 @@ def calculate_forecast_from_metrics(
         "eur_rate": round(eur_rate, 4),
         "currency_info": f"Kurs EUR/PLN: {eur_rate:.4f} (NBP)"
     }
+
+def create_excel_report(results: Dict[str, Any]) -> BytesIO:
+    """
+    Tworzy profesjonalny raport Excel z wynikami prognoz ACOS.
+    
+    Args:
+        results (Dict[str, Any]): Wyniki obliczeń
+    
+    Returns:
+        BytesIO: Bufor z plikiem Excel
+    """
+    # Tworzenie nowego skoroszytu
+    wb = Workbook()
+    ws = wb.active
+    if ws is None:
+        raise ValueError("Nie udało się utworzyć arkusza Excel")
+    
+    ws.title = "Prognoza ACOS"
+    
+    # Kolory firmowe
+    orange_fill = PatternFill(start_color="f39c12", end_color="e67e22", fill_type="solid")
+    light_orange_fill = PatternFill(start_color="fdf2e9", end_color="fdf2e9", fill_type="solid")
+    gray_fill = PatternFill(start_color="f8f9fa", end_color="f8f9fa", fill_type="solid")
+    green_fill = PatternFill(start_color="d4edda", end_color="d4edda", fill_type="solid")
+    red_fill = PatternFill(start_color="f8d7da", end_color="f8d7da", fill_type="solid")
+    
+    # Czcionki
+    title_font = Font(name="Arial", size=18, bold=True, color="2c3e50")
+    header_font = Font(name="Arial", size=12, bold=True, color="ffffff")
+    subheader_font = Font(name="Arial", size=11, bold=True, color="2c3e50")
+    normal_font = Font(name="Arial", size=10, color="2c3e50")
+    
+    # Wyrównania
+    center_alignment = Alignment(horizontal="center", vertical="center")
+    left_alignment = Alignment(horizontal="left", vertical="center")
+    right_alignment = Alignment(horizontal="right", vertical="center")
+    
+    # Ramki
+    thin_border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin")
+    )
+    
+    # Nagłówek raportu
+    ws.merge_cells("A1:J1")
+    ws["A1"] = "🎯 PROGNOZA ACOS - RAPORT ANALITYCZNY"
+    ws["A1"].font = title_font
+    ws["A1"].alignment = center_alignment
+    ws["A1"].fill = light_orange_fill
+    
+    # Informacje o raporcie
+    ws.merge_cells("A2:J2")
+    ws["A2"] = f"Wygenerowano: {datetime.now().strftime('%d.%m.%Y %H:%M')} | AmzTeam.pro"
+    ws["A2"].font = Font(name="Arial", size=10, italic=True, color="7f8c8d")
+    ws["A2"].alignment = center_alignment
+    
+    # Sekcja 1: Parametry wejściowe
+    current_row = 4
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "📊 PARAMETRY WEJŚCIOWE"
+    ws[f"A{current_row}"].font = subheader_font
+    ws[f"A{current_row}"].fill = orange_fill
+    ws[f"A{current_row}"].font = Font(name="Arial", size=12, bold=True, color="ffffff")
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    current_row += 1
+    input_params = [
+        ("Marża brutto", f"{results.get('gross_margin', 0):.1f}%"),
+        ("Docelowe AOV", f"€{results.get('target_aov', 0):.0f} ({results.get('target_aov_pln', 0):.0f} PLN)"),
+        ("Docelowy CTR", f"{results.get('target_ctr', 0):.2f}%"),
+        ("Docelowy CPC", f"€{results.get('target_cpc', 0):.2f} ({results.get('target_cpc_pln', 0):.2f} PLN)"),
+        ("Docelowy CVR", f"{results.get('target_cvr', 0):.2f}%"),
+        ("Wyświetlenia", f"{results.get('impressions', 0):,}".replace(',', ' '))
+    ]
+    
+    for i, (param, value) in enumerate(input_params):
+        row = current_row + i
+        ws[f"A{row}"] = param
+        ws[f"A{row}"].font = normal_font
+        ws[f"A{row}"].alignment = left_alignment
+        ws[f"B{row}"] = value
+        ws[f"B{row}"].font = Font(name="Arial", size=10, bold=True, color="2c3e50")
+        ws[f"B{row}"].alignment = right_alignment
+        
+        # Dodanie obramowania
+        for col in ["A", "B"]:
+            ws[f"{col}{row}"].border = thin_border
+            if i % 2 == 0:
+                ws[f"{col}{row}"].fill = gray_fill
+    
+    # Sekcja 2: Wyniki prognozy
+    current_row += len(input_params) + 2
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "🚀 WYNIKI PROGNOZY"
+    ws[f"A{current_row}"].font = Font(name="Arial", size=12, bold=True, color="ffffff")
+    ws[f"A{current_row}"].fill = orange_fill
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    current_row += 1
+    forecast_results = [
+        ("Prognozowana sprzedaż", f"€{results.get('projected_sales', 0):,}".replace(',', ' '), f"{results.get('projected_sales_pln', 0):,} PLN".replace(',', ' ')),
+        ("Prognozowane wydatki", f"€{results.get('projected_spend', 0):,}".replace(',', ' '), f"{results.get('projected_spend_pln', 0):,} PLN".replace(',', ' ')),
+        ("Oczekiwany ACOS", f"{results.get('acos', 0):.0f}%", ""),
+        ("ROI", f"{results.get('roi', 0):.0f}%", ""),
+        ("Zysk na sprzedaż", f"€{results.get('profit_per_sale', 0):,}".replace(',', ' '), f"{results.get('profit_per_sale_pln', 0):,} PLN".replace(',', ' ')),
+        ("Całkowity zysk", f"€{results.get('profit', 0):,}".replace(',', ' '), f"{results.get('profit_pln', 0):,} PLN".replace(',', ' ')),
+        ("Prognozowane kliknięcia", f"{results.get('clicks', 0):,}".replace(',', ' '), ""),
+        ("Prognozowane zamówienia", f"{results.get('orders', 0):,}".replace(',', ' '), ""),
+        ("Break-even ACOS", f"{results.get('break_even_acos', 0):.0f}%", ""),
+        ("ROAS", f"{results.get('roas', 0):.2f}", ""),
+        ("CPM", f"€{results.get('cpm', 0):.2f}", ""),
+        ("Koszt na konwersję", f"€{results.get('cost_per_conversion', 0):.2f}", "")
+    ]
+    
+    # Nagłówki kolumn
+    ws[f"A{current_row}"] = "WSKAŹNIK"
+    ws[f"B{current_row}"] = "WARTOŚĆ EUR"
+    ws[f"C{current_row}"] = "WARTOŚĆ PLN"
+    
+    for col in ["A", "B", "C"]:
+        ws[f"{col}{current_row}"].font = header_font
+        ws[f"{col}{current_row}"].fill = orange_fill
+        ws[f"{col}{current_row}"].alignment = center_alignment
+        ws[f"{col}{current_row}"].border = thin_border
+    
+    current_row += 1
+    for i, (metric, eur_value, pln_value) in enumerate(forecast_results):
+        row = current_row + i
+        ws[f"A{row}"] = metric
+        ws[f"A{row}"].font = normal_font
+        ws[f"A{row}"].alignment = left_alignment
+        
+        ws[f"B{row}"] = eur_value
+        ws[f"B{row}"].font = Font(name="Arial", size=10, bold=True, color="2c3e50")
+        ws[f"B{row}"].alignment = right_alignment
+        
+        ws[f"C{row}"] = pln_value
+        ws[f"C{row}"].font = normal_font
+        ws[f"C{row}"].alignment = right_alignment
+        
+        # Kolorowanie wierszy
+        fill_color = gray_fill if i % 2 == 0 else PatternFill(start_color="ffffff", end_color="ffffff", fill_type="solid")
+        
+        # Specjalne kolorowanie dla rentowności
+        if "zysk" in metric.lower() or "profit" in metric.lower():
+            profit_value = results.get('profit', 0)
+            if profit_value > 0:
+                fill_color = green_fill
+            elif profit_value < 0:
+                fill_color = red_fill
+        
+        for col in ["A", "B", "C"]:
+            ws[f"{col}{row}"].border = thin_border
+            ws[f"{col}{row}"].fill = fill_color
+    
+    # Sekcja 3: Analiza rentowności
+    current_row += len(forecast_results) + 2
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "💡 ANALIZA RENTOWNOŚCI"
+    ws[f"A{current_row}"].font = Font(name="Arial", size=12, bold=True, color="ffffff")
+    ws[f"A{current_row}"].fill = orange_fill
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    current_row += 1
+    
+    # Status rentowności
+    is_profitable = results.get('is_profitable', False)
+    status_text = "✅ KAMPANIA RENTOWNA" if is_profitable else "⚠️ KAMPANIA NIERENTOWNA"
+    status_color = green_fill if is_profitable else red_fill
+    
+    ws.merge_cells(f"A{current_row}:C{current_row}")
+    ws[f"A{current_row}"] = status_text
+    ws[f"A{current_row}"].font = Font(name="Arial", size=11, bold=True, color="2c3e50")
+    ws[f"A{current_row}"].fill = status_color
+    ws[f"A{current_row}"].alignment = center_alignment
+    ws[f"A{current_row}"].border = thin_border
+    
+    current_row += 1
+    
+    # Komunikat o rentowności
+    profitability_message = results.get('profitability_message', '')
+    if profitability_message:
+        ws.merge_cells(f"A{current_row}:J{current_row}")
+        ws[f"A{current_row}"] = profitability_message.replace('⚠️', '').replace('✅', '').strip()
+        ws[f"A{current_row}"].font = normal_font
+        ws[f"A{current_row}"].alignment = left_alignment
+        ws[f"A{current_row}"].fill = light_orange_fill
+        ws[f"A{current_row}"].border = thin_border
+    
+    # Sekcja 4: Informacje o walucie
+    current_row += 3
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "💱 INFORMACJE O WALUCIE"
+    ws[f"A{current_row}"].font = Font(name="Arial", size=12, bold=True, color="ffffff")
+    ws[f"A{current_row}"].fill = orange_fill
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    current_row += 1
+    currency_info = results.get('currency_info', '')
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = currency_info
+    ws[f"A{current_row}"].font = normal_font
+    ws[f"A{current_row}"].alignment = center_alignment
+    ws[f"A{current_row}"].fill = light_orange_fill
+    ws[f"A{current_row}"].border = thin_border
+    
+    # Stopka
+    current_row += 3
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "🔧 Wygenerowano przez AmzTeam.pro | Kalkulator ACOS"
+    ws[f"A{current_row}"].font = Font(name="Arial", size=9, italic=True, color="7f8c8d")
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    current_row += 1
+    ws.merge_cells(f"A{current_row}:J{current_row}")
+    ws[f"A{current_row}"] = "📧 Kontakt: Bartek z Twoje Drzwi do Amazon | Powered by Cursor AI"
+    ws[f"A{current_row}"].font = Font(name="Arial", size=9, italic=True, color="7f8c8d")
+    ws[f"A{current_row}"].alignment = center_alignment
+    
+    # Dostosowanie szerokości kolumn
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 15
+    
+    # Zapisanie do bufora
+    excel_buffer = BytesIO()
+    wb.save(excel_buffer)
+    excel_buffer.seek(0)
+    
+    return excel_buffer
 
 def format_currency(amount: float, currency: str = "EUR") -> str:
     """

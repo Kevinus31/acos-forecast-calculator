@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Request, Form, UploadFile, File
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 import os
-from .utils import calculate_acos, calculate_forecast_from_metrics, generate_export_data, get_eur_rate_from_nbp
+from .utils import calculate_acos, calculate_forecast_from_metrics, generate_export_data, get_eur_rate_from_nbp, create_excel_report
 import json
+from datetime import datetime
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(title="ACOS Forecast Calculator", description="Kalkulator prognoz ACOS")
@@ -126,24 +127,25 @@ async def export_results(
     target_cvr: float = Form(...),
     impressions: int = Form(...)
 ):
-    """Endpoint do eksportu wyników obliczeń w formacie JSON"""
+    """Endpoint do eksportu wyników obliczeń w formacie Excel"""
     
     # Oblicz wyniki
     results = calculate_forecast_from_metrics(
         gross_margin, target_aov, target_ctr, target_cpc, target_cvr, impressions
     )
     
-    # Wygeneruj dane do eksportu
-    export_data = generate_export_data(results)
+    # Wygeneruj raport Excel
+    excel_buffer = create_excel_report(results)
     
-    # Zwróć dane JSON do pobrania
-    from fastapi.responses import JSONResponse
+    # Generuj nazwę pliku z datą
+    filename = f"prognoza_acos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     
-    return JSONResponse(
-        content=export_data,
+    # Zwróć plik Excel do pobrania
+    return StreamingResponse(
+        iter([excel_buffer.getvalue()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": "attachment; filename=acos_forecast_results.json",
-            "Content-Type": "application/json"
+            "Content-Disposition": f"attachment; filename={filename}"
         }
     )
 
