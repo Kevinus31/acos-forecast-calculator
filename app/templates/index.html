@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACOS Forecast Calculator</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ACOS Forecast Calculator</h1>
+            <p>Kalkulator prognoz rentowności kampanii reklamowych</p>
+        </header>
+
+        <!-- Komunikaty błędów i sukcesów -->
+        {% if error %}
+        <div class="alert alert-error">
+            <strong>Błąd:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">
+            <strong>Sukces:</strong> {{ success }}
+        </div>
+        {% endif %}
+
+        <!-- Formularz do obliczeń -->
+        <div class="form-section">
+            <h2>Wprowadź dane kampanii</h2>
+            <form method="POST" action="/calculate" class="calculation-form">
+                <div class="form-group">
+                    <label for="sales">Prognozowana sprzedaż (PLN)</label>
+                    <input type="number" id="sales" name="sales" step="0.01" min="0" 
+                           value="{{ sales if sales else '' }}" 
+                           placeholder="np. 10000.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="spend">Prognozowane wydatki na reklamę (PLN)</label>
+                    <input type="number" id="spend" name="spend" step="0.01" min="0" 
+                           value="{{ spend if spend else '' }}" 
+                           placeholder="np. 2000.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="margin">Marża brutto (%)</label>
+                    <input type="number" id="margin" name="margin" step="0.01" min="0" max="100" 
+                           value="{{ margin if margin else '' }}" 
+                           placeholder="np. 25.00" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Oblicz ACOS</button>
+            </form>
+        </div>
+
+        <!-- Upload pliku -->
+        <div class="form-section">
+            <h2>Import danych z pliku</h2>
+            <form method="POST" action="/upload" enctype="multipart/form-data" class="upload-form">
+                <div class="form-group">
+                    <label for="file">Przesłij plik CSV z danymi</label>
+                    <input type="file" id="file" name="file" accept=".csv" required>
+                    <small class="form-text">Dozwolone formaty: CSV</small>
+                </div>
+                <button type="submit" class="btn btn-secondary">Prześlij plik</button>
+            </form>
+        </div>
+
+        <!-- Wyniki obliczeń -->
+        {% if results %}
+        <div class="results-section">
+            <h2>Wyniki analizy</h2>
+            
+            <!-- Komunikat o rentowności -->
+            {% if results.profitability_message %}
+            <div class="alert {{ 'alert-success' if results.is_profitable else 'alert-error' }}">
+                {{ results.profitability_message }}
+            </div>
+            {% endif %}
+
+            <!-- Metryki główne -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>ACOS</h3>
+                    <div class="metric-value {{ 'profitable' if results.is_profitable else 'unprofitable' }}">
+                        {{ results.acos }}%
+                    </div>
+                    <small>Koszt reklamy do sprzedaży</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>ROI</h3>
+                    <div class="metric-value {{ 'profitable' if results.roi > 0 else 'unprofitable' }}">
+                        {{ results.roi }}%
+                    </div>
+                    <small>Zwrot z inwestycji</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Zysk</h3>
+                    <div class="metric-value {{ 'profitable' if results.profit > 0 else 'unprofitable' }}">
+                        {{ "{:,.2f}".format(results.profit).replace(',', ' ') }} PLN
+                    </div>
+                    <small>Przewidywany zysk</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Break-even ACOS</h3>
+                    <div class="metric-value neutral">
+                        {{ results.break_even_acos }}%
+                    </div>
+                    <small>Punkt rentowności</small>
+                </div>
+            </div>
+
+            <!-- Podsumowanie -->
+            <div class="summary-section">
+                <h3>Podsumowanie</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="label">Prognozowana sprzedaż:</span>
+                        <span class="value">{{ "{:,.2f}".format(results.sales).replace(',', ' ') }} PLN</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Wydatki na reklamę:</span>
+                        <span class="value">{{ "{:,.2f}".format(results.spend).replace(',', ' ') }} PLN</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Marża brutto:</span>
+                        <span class="value">{{ results.margin }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Informacje dodatkowe -->
+        <div class="info-section">
+            <h2>Jak czytać wyniki?</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>ACOS (Advertising Cost of Sales)</strong>
+                    <p>Wskaźnik określający, ile kosztuje reklama w stosunku do sprzedaży. Niższy ACOS oznacza wyższą rentowność.</p>
+                </div>
+                <div class="info-item">
+                    <strong>ROI (Return on Investment)</strong>
+                    <p>Zwrot z inwestycji w reklamę. Dodatni ROI oznacza zysk z kampanii.</p>
+                </div>
+                <div class="info-item">
+                    <strong>Break-even ACOS</strong>
+                    <p>Maksymalny ACOS, przy którym kampania jest jeszcze rentowna. Równa się marży brutto.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 ACOS Forecast Calculator. Prosta analiza rentowności kampanii reklamowych.</p>
+    </footer>
+</body>
+</html> 
