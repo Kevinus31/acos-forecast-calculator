@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 import os
-from .utils import calculate_acos
+from .utils import calculate_acos, calculate_forecast_from_metrics
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(title="ACOS Forecast Calculator", description="Kalkulator prognoz ACOS")
@@ -47,6 +47,49 @@ async def calculate(
         "sales": sales,
         "spend": spend,
         "margin": margin
+    })
+
+@app.post("/calculate-forecast", response_class=HTMLResponse)
+async def calculate_forecast(
+    request: Request,
+    gross_margin: float = Form(..., description="Marża brutto w procentach"),
+    target_aov: float = Form(..., description="Docelowa wartość średniego zamówienia"),
+    target_ctr: float = Form(..., description="Docelowy CTR w procentach"),
+    target_cpc: float = Form(..., description="Docelowy koszt za kliknięcie"),
+    target_cvr: float = Form(..., description="Docelowy współczynnik konwersji w procentach"),
+    impressions: int = Form(..., description="Liczba wyświetleń")
+):
+    """Obliczanie prognoz na podstawie zaawansowanych metryk kampanii"""
+    
+    # Walidacja danych wejściowych
+    if any(val < 0 for val in [gross_margin, target_aov, target_ctr, target_cpc, target_cvr, impressions]):
+        error_message = "Wszystkie wartości muszą być dodatnie!"
+        return templates.TemplateResponse("index.html", {
+            "request": request,
+            "error": error_message,
+            "gross_margin": gross_margin,
+            "target_aov": target_aov,
+            "target_ctr": target_ctr,
+            "target_cpc": target_cpc,
+            "target_cvr": target_cvr,
+            "impressions": impressions
+        })
+    
+    # Obliczenie prognoz
+    results = calculate_forecast_from_metrics(
+        gross_margin, target_aov, target_ctr, target_cpc, target_cvr, impressions
+    )
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "results": results,
+        "forecast_mode": True,
+        "gross_margin": gross_margin,
+        "target_aov": target_aov,
+        "target_ctr": target_ctr,
+        "target_cpc": target_cpc,
+        "target_cvr": target_cvr,
+        "impressions": impressions
     })
 
 @app.post("/upload", response_class=HTMLResponse)

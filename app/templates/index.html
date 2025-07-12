@@ -26,8 +26,123 @@
         </div>
         {% endif %}
 
-        <!-- Formularz do obliczeń -->
-        <div class="form-section">
+        <!-- Wybór metody wprowadzania danych -->
+        <div class="input-method-section">
+            <h2>1. Metoda wprowadzania danych</h2>
+            <div class="method-selector">
+                <div class="method-option" id="manual-method">
+                    <div class="method-icon">⚙️</div>
+                    <h3>Manual Inputs</h3>
+                    <p>Wprowadź docelowe wskaźniki kampanii używając suwaków i pól</p>
+                    <button type="button" class="btn btn-primary" onclick="selectMethod('manual')">Wybierz</button>
+                </div>
+                <div class="method-option" id="upload-method">
+                    <div class="method-icon">📤</div>
+                    <h3>Bulk Operations Upload</h3>
+                    <p>Prześlij raport z danymi kampanii aby wstępnie wypełnić metryki</p>
+                    <button type="button" class="btn btn-secondary" onclick="selectMethod('upload')">Wybierz</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formularz z suwakami dla zaawansowanych metryk -->
+        <div class="form-section forecast-variables-section" id="forecast-form" style="display: none;">
+            <h2>2. Zmienne prognozy</h2>
+            <p>Wprowadź docelowe wskaźniki kampanii ręcznie lub użyj suwaków aby dostosować wartości.</p>
+            
+            <form method="POST" action="/calculate-forecast" class="forecast-form">
+                <div class="variables-grid">
+                    <!-- Marża brutto -->
+                    <div class="variable-item">
+                        <label for="gross_margin">Marża brutto (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="gross_margin_slider" min="0" max="100" step="0.1" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   oninput="updateSliderValue('gross_margin', this.value)">
+                            <input type="number" id="gross_margin" name="gross_margin" step="0.1" min="0" max="100" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   onchange="updateSliderFromInput('gross_margin', this.value)" required>
+                        </div>
+                        <small>Marża zysku produktu przed kosztami reklamy</small>
+                    </div>
+
+                    <!-- Target AOV -->
+                    <div class="variable-item">
+                        <label for="target_aov">Docelowa wartość zamówienia (PLN)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_aov_slider" min="10" max="1000" step="0.1" 
+                                   value="{{ target_aov if target_aov else '25' }}" 
+                                   oninput="updateSliderValue('target_aov', this.value)">
+                            <input type="number" id="target_aov" name="target_aov" step="0.1" min="10" max="1000" 
+                                   value="{{ target_aov if target_aov else '25' }}" 
+                                   onchange="updateSliderFromInput('target_aov', this.value)" required>
+                        </div>
+                        <small>Oczekiwana średnia wartość zamówienia</small>
+                    </div>
+
+                    <!-- Target CTR -->
+                    <div class="variable-item">
+                        <label for="target_ctr">Docelowy CTR (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_ctr_slider" min="0.1" max="20" step="0.1" 
+                                   value="{{ target_ctr if target_ctr else '3' }}" 
+                                   oninput="updateSliderValue('target_ctr', this.value)">
+                            <input type="number" id="target_ctr" name="target_ctr" step="0.1" min="0.1" max="20" 
+                                   value="{{ target_ctr if target_ctr else '3' }}" 
+                                   onchange="updateSliderFromInput('target_ctr', this.value)" required>
+                        </div>
+                        <small>Oczekiwany współczynnik klikalności</small>
+                    </div>
+
+                    <!-- Target CPC -->
+                    <div class="variable-item">
+                        <label for="target_cpc">Docelowy CPC (PLN)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_cpc_slider" min="0.1" max="50" step="0.1" 
+                                   value="{{ target_cpc if target_cpc else '1' }}" 
+                                   oninput="updateSliderValue('target_cpc', this.value)">
+                            <input type="number" id="target_cpc" name="target_cpc" step="0.1" min="0.1" max="50" 
+                                   value="{{ target_cpc if target_cpc else '1' }}" 
+                                   onchange="updateSliderFromInput('target_cpc', this.value)" required>
+                        </div>
+                        <small>Oczekiwany koszt za kliknięcie</small>
+                    </div>
+
+                    <!-- Target CVR -->
+                    <div class="variable-item">
+                        <label for="target_cvr">Docelowy CVR (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_cvr_slider" min="0.1" max="30" step="0.1" 
+                                   value="{{ target_cvr if target_cvr else '3' }}" 
+                                   oninput="updateSliderValue('target_cvr', this.value)">
+                            <input type="number" id="target_cvr" name="target_cvr" step="0.1" min="0.1" max="30" 
+                                   value="{{ target_cvr if target_cvr else '3' }}" 
+                                   onchange="updateSliderFromInput('target_cvr', this.value)" required>
+                        </div>
+                        <small>Oczekiwany współczynnik konwersji</small>
+                    </div>
+
+                    <!-- Impressions -->
+                    <div class="variable-item">
+                        <label for="impressions">Wyświetlenia</label>
+                        <div class="slider-container">
+                            <input type="range" id="impressions_slider" min="100" max="100000" step="100" 
+                                   value="{{ impressions if impressions else '1000' }}" 
+                                   oninput="updateSliderValue('impressions', this.value)">
+                            <input type="number" id="impressions" name="impressions" step="100" min="100" max="100000" 
+                                   value="{{ impressions if impressions else '1000' }}" 
+                                   onchange="updateSliderFromInput('impressions', this.value)" required>
+                        </div>
+                        <small>Oczekiwana liczba wyświetleń reklamy</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Oblicz prognozę</button>
+            </form>
+        </div>
+
+        <!-- Prosty formularz do obliczeń (ukryty domyślnie) -->
+        <div class="form-section" id="simple-form" style="display: none;">
             <h2>Wprowadź dane kampanii</h2>
             <form method="POST" action="/calculate" class="calculation-form">
                 <div class="form-group">
@@ -113,6 +228,41 @@
                     </div>
                     <small>Punkt rentowności</small>
                 </div>
+
+                {% if forecast_mode %}
+                <!-- Dodatkowe metryki dla trybu forecast -->
+                <div class="metric-card">
+                    <h3>ROAS</h3>
+                    <div class="metric-value {{ 'profitable' if results.roas > 1 else 'unprofitable' }}">
+                        {{ results.roas }}x
+                    </div>
+                    <small>Zwrot z wydatków reklamowych</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>CPM</h3>
+                    <div class="metric-value neutral">
+                        {{ results.cpm }} PLN
+                    </div>
+                    <small>Koszt za 1000 wyświetleń</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Koszt konwersji</h3>
+                    <div class="metric-value neutral">
+                        {{ results.cost_per_conversion }} PLN
+                    </div>
+                    <small>Koszt za konwersję</small>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Kliknięcia</h3>
+                    <div class="metric-value neutral">
+                        {{ results.clicks|int }}
+                    </div>
+                    <small>Przewidywane kliknięcia</small>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Podsumowanie -->
@@ -159,5 +309,107 @@
     <footer>
         <p>&copy; 2024 ACOS Forecast Calculator. Prosta analiza rentowności kampanii reklamowych.</p>
     </footer>
+
+    <script>
+        // Funkcja do wyboru metody wprowadzania danych
+        function selectMethod(method) {
+            const forecastForm = document.getElementById('forecast-form');
+            const simpleForm = document.getElementById('simple-form');
+            const uploadSection = document.querySelector('.upload-form').parentElement;
+            
+            if (method === 'manual') {
+                forecastForm.style.display = 'block';
+                simpleForm.style.display = 'none';
+                uploadSection.style.display = 'none';
+                
+                // Podświetlenie wybranej opcji
+                document.getElementById('manual-method').classList.add('selected');
+                document.getElementById('upload-method').classList.remove('selected');
+            } else if (method === 'upload') {
+                forecastForm.style.display = 'none';
+                simpleForm.style.display = 'none';
+                uploadSection.style.display = 'block';
+                
+                // Podświetlenie wybranej opcji
+                document.getElementById('upload-method').classList.add('selected');
+                document.getElementById('manual-method').classList.remove('selected');
+            }
+        }
+
+        // Funkcja do aktualizacji wartości pola liczbowego na podstawie suwaka
+        function updateSliderValue(fieldName, value) {
+            const numberInput = document.getElementById(fieldName);
+            const slider = document.getElementById(fieldName + '_slider');
+            
+            numberInput.value = value;
+            
+            // Aktualizacja koloru suwaka na podstawie wartości
+            updateSliderColor(slider, value);
+        }
+
+        // Funkcja do aktualizacji suwaka na podstawie pola liczbowego
+        function updateSliderFromInput(fieldName, value) {
+            const slider = document.getElementById(fieldName + '_slider');
+            const numberInput = document.getElementById(fieldName);
+            
+            // Walidacja zakresu
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const numValue = parseFloat(value);
+            
+            if (numValue >= min && numValue <= max) {
+                slider.value = value;
+                updateSliderColor(slider, value);
+            } else {
+                // Przywrócenie poprzedniej wartości jeśli poza zakresem
+                numberInput.value = slider.value;
+                alert(`Wartość musi być między ${min} a ${max}`);
+            }
+        }
+
+        // Funkcja do aktualizacji koloru suwaka
+        function updateSliderColor(slider, value) {
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const percentage = ((value - min) / (max - min)) * 100;
+            
+            slider.style.background = `linear-gradient(to right, #667eea 0%, #667eea ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
+        }
+
+        // Inicjalizacja suwaków przy ładowaniu strony
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(slider => {
+                updateSliderColor(slider, slider.value);
+                
+                // Dodanie nasłuchiwania na zmianę wartości
+                slider.addEventListener('input', function() {
+                    updateSliderColor(this, this.value);
+                });
+            });
+            
+            // Domyślne wyświetlenie metody manual
+            selectMethod('manual');
+        });
+
+        // Funkcja do formatowania liczb w czasie rzeczywistym
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        // Dodanie efektów hover do kart metryk
+        document.addEventListener('DOMContentLoaded', function() {
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
 </body>
 </html> 
