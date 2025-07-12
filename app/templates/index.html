@@ -321,15 +321,15 @@
                 <div class="summary-grid">
                     <div class="summary-item">
                         <span class="label">Prognozowana sprzedaż:</span>
-                        <span class="value">{{ "{:,.2f}".format(results.sales).replace(',', ' ') }} PLN</span>
+                        <span class="value">€{{ results.projected_sales|int }}</span>
                     </div>
                     <div class="summary-item">
                         <span class="label">Wydatki na reklamę:</span>
-                        <span class="value">{{ "{:,.2f}".format(results.spend).replace(',', ' ') }} PLN</span>
+                        <span class="value">€{{ results.projected_spend|int }}</span>
                     </div>
                     <div class="summary-item">
                         <span class="label">Marża brutto:</span>
-                        <span class="value">{{ results.margin }}%</span>
+                        <span class="value">{{ results.gross_margin }}%</span>
                     </div>
                 </div>
             </div>
@@ -409,6 +409,10 @@
             
             // Aktualizacja koloru suwaka na podstawie wartości
             updateSliderColor(slider, value);
+            
+            // Automatyczne przeliczenie w czasie rzeczywistym z debouncing
+            clearTimeout(window.calculateTimeout);
+            window.calculateTimeout = setTimeout(calculateRealTime, 300);
         }
 
         // Funkcja do aktualizacji suwaka na podstawie pola liczbowego
@@ -424,11 +428,136 @@
             if (numValue >= min && numValue <= max) {
                 slider.value = value;
                 updateSliderColor(slider, value);
+                
+                // Automatyczne przeliczenie w czasie rzeczywistym z debouncing
+                clearTimeout(window.calculateTimeout);
+                window.calculateTimeout = setTimeout(calculateRealTime, 300);
             } else {
                 // Przywrócenie poprzedniej wartości jeśli poza zakresem
                 numberInput.value = slider.value;
                 alert(`Wartość musi być między ${min} a ${max}`);
             }
+        }
+
+        // Funkcja do przeliczania w czasie rzeczywistym
+        async function calculateRealTime() {
+            // Pobieranie wartości z formularza
+            const gross_margin = document.getElementById('gross_margin').value;
+            const target_aov = document.getElementById('target_aov').value;
+            const target_ctr = document.getElementById('target_ctr').value;
+            const target_cpc = document.getElementById('target_cpc').value;
+            const target_cvr = document.getElementById('target_cvr').value;
+            const impressions = document.getElementById('impressions').value;
+            
+            // Sprawdzenie czy wszystkie pola są wypełnione
+            if (!gross_margin || !target_aov || !target_ctr || !target_cpc || !target_cvr || !impressions) {
+                return;
+            }
+            
+            // Pokazanie wskaźnika ładowania
+            showLoadingIndicator();
+            
+            try {
+                // Przygotowanie danych do wysłania
+                const formData = new FormData();
+                formData.append('gross_margin', gross_margin);
+                formData.append('target_aov', target_aov);
+                formData.append('target_ctr', target_ctr);
+                formData.append('target_cpc', target_cpc);
+                formData.append('target_cvr', target_cvr);
+                formData.append('impressions', impressions);
+                
+                // Wysłanie zapytania do API
+                const response = await fetch('/calculate-forecast', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    updateResultsSection(html);
+                } else {
+                    console.error('Błąd podczas obliczania:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Błąd podczas obliczania:', error);
+            } finally {
+                hideLoadingIndicator();
+            }
+        }
+
+        // Funkcja do wyświetlania wskaźnika ładowania
+        function showLoadingIndicator() {
+            let loadingDiv = document.getElementById('loading-indicator');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loading-indicator';
+                loadingDiv.innerHTML = '<div class="loading-spinner">🔄 Obliczanie...</div>';
+                loadingDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    z-index: 1000;
+                    font-size: 16px;
+                    font-weight: bold;
+                `;
+                document.body.appendChild(loadingDiv);
+            }
+            loadingDiv.style.display = 'block';
+        }
+
+        // Funkcja do ukrywania wskaźnika ładowania
+        function hideLoadingIndicator() {
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Funkcja do aktualizacji sekcji wyników
+        function updateResultsSection(html) {
+            // Parsowanie HTML odpowiedzi
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Znalezienie sekcji wyników w nowym HTML
+            const newResultsSection = doc.querySelector('.results-section');
+            
+            if (newResultsSection) {
+                // Usunięcie starej sekcji wyników jeśli istnieje
+                const oldResultsSection = document.querySelector('.results-section');
+                if (oldResultsSection) {
+                    oldResultsSection.remove();
+                }
+                
+                // Dodanie nowej sekcji wyników
+                const forecastForm = document.querySelector('.forecast-form');
+                if (forecastForm) {
+                    forecastForm.parentElement.insertAdjacentElement('afterend', newResultsSection);
+                }
+                
+                // Ponowne dodanie efektów hover do kart metryk
+                addHoverEffectsToMetricCards();
+            }
+        }
+
+        // Funkcja do dodawania efektów hover do kart metryk
+        function addHoverEffectsToMetricCards() {
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
         }
 
         // Funkcja do aktualizacji koloru suwaka
@@ -440,8 +569,9 @@
             slider.style.background = `linear-gradient(to right, #667eea 0%, #667eea ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
         }
 
-        // Inicjalizacja suwaków przy ładowaniu strony
+        // Inicjalizacja wszystkich elementów przy ładowaniu strony
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicjalizacja suwaków
             const sliders = document.querySelectorAll('input[type="range"]');
             sliders.forEach(slider => {
                 updateSliderColor(slider, slider.value);
@@ -452,28 +582,58 @@
                 });
             });
             
+            // Dodanie event listenerów do pól input dla automatycznego przeliczania
+            const inputFields = ['gross_margin', 'target_aov', 'target_ctr', 'target_cpc', 'target_cvr', 'impressions'];
+            inputFields.forEach(fieldName => {
+                const inputField = document.getElementById(fieldName);
+                if (inputField) {
+                    inputField.addEventListener('input', function() {
+                        // Debouncing - opóźnienie wykonania aby uniknąć zbyt częstych wywołań
+                        clearTimeout(window.calculateTimeout);
+                        window.calculateTimeout = setTimeout(calculateRealTime, 500);
+                    });
+                }
+            });
+            
+            // Ukrycie przycisku "Oblicz prognozę" i zmiana na informacyjny tekst
+            const submitButton = document.querySelector('.forecast-form button[type="submit"]');
+            if (submitButton) {
+                submitButton.style.display = 'none';
+                
+                // Dodanie informacji o automatycznym przeliczaniu
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'real-time-info';
+                infoDiv.innerHTML = `
+                    <div style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 15px;
+                        border-radius: 10px;
+                        text-align: center;
+                        margin-top: 20px;
+                        font-weight: bold;
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                    ">
+                        ⚡ Wyniki przeliczają się automatycznie w czasie rzeczywistym!
+                    </div>
+                `;
+                submitButton.parentElement.appendChild(infoDiv);
+            }
+            
             // Domyślne wyświetlenie metody manual
             selectMethod('manual');
+            
+            // Dodanie efektów hover do istniejących kart metryk
+            addHoverEffectsToMetricCards();
+            
+            // Automatyczne przeliczenie przy pierwszym załadowaniu strony
+            setTimeout(calculateRealTime, 1000);
         });
 
         // Funkcja do formatowania liczb w czasie rzeczywistym
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
-
-        // Dodanie efektów hover do kart metryk
-        document.addEventListener('DOMContentLoaded', function() {
-            const metricCards = document.querySelectorAll('.metric-card');
-            metricCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-5px) scale(1.02)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                });
-            });
-        });
     </script>
 </body>
 </html> 
