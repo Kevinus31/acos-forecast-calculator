@@ -68,16 +68,16 @@
 
                     <!-- Target AOV -->
                     <div class="variable-item">
-                        <label for="target_aov">Docelowa wartość zamówienia (PLN)</label>
+                        <label for="target_aov">Docelowa wartość zamówienia (EUR)</label>
                         <div class="slider-container">
-                            <input type="range" id="target_aov_slider" min="10" max="1000" step="0.1" 
+                            <input type="range" id="target_aov_slider" min="5" max="500" step="0.1" 
                                    value="{{ target_aov if target_aov else '25' }}" 
                                    oninput="updateSliderValue('target_aov', this.value)">
-                            <input type="number" id="target_aov" name="target_aov" step="0.1" min="10" max="1000" 
+                            <input type="number" id="target_aov" name="target_aov" step="0.1" min="5" max="500" 
                                    value="{{ target_aov if target_aov else '25' }}" 
                                    onchange="updateSliderFromInput('target_aov', this.value)" required>
                         </div>
-                        <small>Oczekiwana średnia wartość zamówienia</small>
+                        <small>Oczekiwana średnia wartość zamówienia w EUR</small>
                     </div>
 
                     <!-- Target CTR -->
@@ -96,16 +96,16 @@
 
                     <!-- Target CPC -->
                     <div class="variable-item">
-                        <label for="target_cpc">Docelowy CPC (PLN)</label>
+                        <label for="target_cpc">Docelowy CPC (EUR)</label>
                         <div class="slider-container">
-                            <input type="range" id="target_cpc_slider" min="0.1" max="50" step="0.1" 
+                            <input type="range" id="target_cpc_slider" min="0.1" max="20" step="0.1" 
                                    value="{{ target_cpc if target_cpc else '1' }}" 
                                    oninput="updateSliderValue('target_cpc', this.value)">
-                            <input type="number" id="target_cpc" name="target_cpc" step="0.1" min="0.1" max="50" 
+                            <input type="number" id="target_cpc" name="target_cpc" step="0.1" min="0.1" max="20" 
                                    value="{{ target_cpc if target_cpc else '1' }}" 
                                    onchange="updateSliderFromInput('target_cpc', this.value)" required>
                         </div>
-                        <small>Oczekiwany koszt za kliknięcie</small>
+                        <small>Oczekiwany koszt za kliknięcie w EUR (Bid)</small>
                     </div>
 
                     <!-- Target CVR -->
@@ -195,74 +195,124 @@
             </div>
             {% endif %}
 
-            <!-- Metryki główne -->
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>ACOS</h3>
-                    <div class="metric-value {{ 'profitable' if results.is_profitable else 'unprofitable' }}">
-                        {{ results.acos }}%
+            <!-- Forecast Results - główne metryki zgodnie ze screenshotem -->
+            <div class="forecast-results-header">
+                <h2>3. Forecast Results</h2>
+                {% if results.currency_info %}
+                <div class="currency-info">
+                    <small>{{ results.currency_info }}</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="forecast-grid">
+                <!-- Górny rząd - główne wyniki -->
+                <div class="metric-card projected-sales">
+                    <h3>Projected Sales</h3>
+                    <div class="metric-value blue">
+                        €{{ results.projected_sales|int }}
                     </div>
-                    <small>Koszt reklamy do sprzedaży</small>
+                    <div class="metric-icon">📈</div>
                 </div>
 
-                <div class="metric-card">
+                <div class="metric-card projected-spend">
+                    <h3>Projected Spend</h3>
+                    <div class="metric-value red">
+                        €{{ results.projected_spend|int }}
+                    </div>
+                    <div class="metric-icon">💰</div>
+                </div>
+
+                <!-- Drugi rząd -->
+                <div class="metric-card expected-acos">
+                    <h3>Expected ACOS</h3>
+                    <div class="metric-value {{ 'profitable' if results.is_profitable else 'unprofitable' }}">
+                        {{ results.acos|int }}%
+                    </div>
+                    <div class="metric-icon">🎯</div>
+                </div>
+
+                <div class="metric-card roi">
                     <h3>ROI</h3>
                     <div class="metric-value {{ 'profitable' if results.roi > 0 else 'unprofitable' }}">
-                        {{ results.roi }}%
+                        {{ results.roi|int }}%
                     </div>
-                    <small>Zwrot z inwestycji</small>
+                    <div class="metric-icon">📊</div>
                 </div>
 
-                <div class="metric-card">
-                    <h3>Zysk</h3>
+                <!-- Trzeci rząd -->
+                <div class="metric-card profit-per-sale">
+                    <h3>Profit per Sale</h3>
+                    <div class="metric-value {{ 'profitable' if results.profit_per_sale > 0 else 'unprofitable' }}">
+                        €{{ results.profit_per_sale|int }}
+                    </div>
+                    <div class="metric-icon">💸</div>
+                </div>
+
+                <div class="metric-card total-profit">
+                    <h3>Total Profit</h3>
                     <div class="metric-value {{ 'profitable' if results.profit > 0 else 'unprofitable' }}">
-                        {{ "{:,.2f}".format(results.profit).replace(',', ' ') }} PLN
+                        €{{ results.profit|int }}
                     </div>
-                    <small>Przewidywany zysk</small>
+                    <div class="metric-icon">💵</div>
                 </div>
 
-                <div class="metric-card">
-                    <h3>Break-even ACOS</h3>
-                    <div class="metric-value neutral">
-                        {{ results.break_even_acos }}%
-                    </div>
-                    <small>Punkt rentowności</small>
-                </div>
-
-                {% if forecast_mode %}
-                <!-- Dodatkowe metryki dla trybu forecast -->
-                <div class="metric-card">
-                    <h3>ROAS</h3>
-                    <div class="metric-value {{ 'profitable' if results.roas > 1 else 'unprofitable' }}">
-                        {{ results.roas }}x
-                    </div>
-                    <small>Zwrot z wydatków reklamowych</small>
-                </div>
-
-                <div class="metric-card">
-                    <h3>CPM</h3>
-                    <div class="metric-value neutral">
-                        {{ results.cpm }} PLN
-                    </div>
-                    <small>Koszt za 1000 wyświetleń</small>
-                </div>
-
-                <div class="metric-card">
-                    <h3>Koszt konwersji</h3>
-                    <div class="metric-value neutral">
-                        {{ results.cost_per_conversion }} PLN
-                    </div>
-                    <small>Koszt za konwersję</small>
-                </div>
-
-                <div class="metric-card">
-                    <h3>Kliknięcia</h3>
+                <!-- Czwarty rząd - dodatkowe metryki -->
+                <div class="metric-card projected-clicks">
+                    <h3>Projected Clicks</h3>
                     <div class="metric-value neutral">
                         {{ results.clicks|int }}
                     </div>
-                    <small>Przewidywane kliknięcia</small>
                 </div>
-                {% endif %}
+
+                <div class="metric-card projected-orders">
+                    <h3>Projected Orders</h3>
+                    <div class="metric-value neutral">
+                        {{ results.orders|int }}
+                    </div>
+                </div>
+
+                <!-- Piąty rząd -->
+                <div class="metric-card projected-spend-alt">
+                    <h3>Projected Spend</h3>
+                    <div class="metric-value neutral">
+                        €{{ results.projected_spend|int }}
+                    </div>
+                </div>
+
+                <div class="metric-card break-even-acos">
+                    <h3>Break-even ACOS</h3>
+                    <div class="metric-value neutral">
+                        {{ results.break_even_acos|int }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ostrzeżenie o nierentowności jak na screenshocie -->
+            {% if not results.is_profitable %}
+            <div class="unprofitable-warning">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-content">
+                    <h3>Nierentowna kampania</h3>
+                    <p>{{ results.profitability_message }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Przycisk eksportu wyników -->
+            <div class="export-section">
+                <h3>Eksport wyników do planowania budżetu</h3>
+                <form method="POST" action="/export-results" class="export-form">
+                    <input type="hidden" name="gross_margin" value="{{ gross_margin }}">
+                    <input type="hidden" name="target_aov" value="{{ target_aov }}">
+                    <input type="hidden" name="target_ctr" value="{{ target_ctr }}">
+                    <input type="hidden" name="target_cpc" value="{{ target_cpc }}">
+                    <input type="hidden" name="target_cvr" value="{{ target_cvr }}">
+                    <input type="hidden" name="impressions" value="{{ impressions }}">
+                    <button type="submit" class="btn btn-export">
+                        📥 Pobierz dane prognozy (JSON)
+                    </button>
+                </form>
             </div>
 
             <!-- Podsumowanie -->
@@ -286,21 +336,35 @@
         </div>
         {% endif %}
 
-        <!-- Informacje dodatkowe -->
+        <!-- Informacje o narzędziu -->
         <div class="info-section">
-            <h2>Jak czytać wyniki?</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <strong>ACOS (Advertising Cost of Sales)</strong>
-                    <p>Wskaźnik określający, ile kosztuje reklama w stosunku do sprzedaży. Niższy ACOS oznacza wyższą rentowność.</p>
-                </div>
-                <div class="info-item">
-                    <strong>ROI (Return on Investment)</strong>
-                    <p>Zwrot z inwestycji w reklamę. Dodatni ROI oznacza zysk z kampanii.</p>
-                </div>
-                <div class="info-item">
-                    <strong>Break-even ACOS</strong>
-                    <p>Maksymalny ACOS, przy którym kampania jest jeszcze rentowna. Równa się marży brutto.</p>
+            <h2>ACOS Forecast Calculator</h2>
+            <div class="tool-description">
+                <h3>Co robi to narzędzie?</h3>
+                <p>Oblicza i prognozuje Advertising Cost of Sale (ACOS) aby zoptymalizować rentowność kampanii i alokację budżetu. Przewiduje ACOS na podstawie metryk CTR, CVR, AOV i CPC z szczegółową analizą zysku.</p>
+                
+                <h3>Kluczowe funkcje:</h3>
+                <ul>
+                    <li><strong>Prognozowanie ACOS:</strong> Przewiduje koszt reklamy względem sprzedaży na podstawie metryk wydajności</li>
+                    <li><strong>Analiza zysku:</strong> Oblicza oczekiwany zysk na sprzedaż po kosztach reklamy</li>
+                    <li><strong>Ustawianie celów:</strong> Optymalizuje CTR, CVR, AOV i CPC dla rentowności</li>
+                    <li><strong>Planowanie budżetu:</strong> Planuje wydatki na reklamę na podstawie oczekiwanej wydajności</li>
+                </ul>
+
+                <h3>Jak używać tego narzędzia:</h3>
+                <ol>
+                    <li>Wybierz metodę wprowadzania danych: prześlij plik operacji hurtowych lub użyj ręcznych danych</li>
+                    <li>Ustaw zmienne: skonfiguruj marżę brutto, CTR, CVR, AOV i cele CPC</li>
+                    <li>Przejrzyj prognozę: analizuj oczekiwane projekcje ACOS i zysku</li>
+                    <li>Dostosuj cele: dostrajaj metryki aby zoptymalizować rentowność</li>
+                    <li>Eksportuj wyniki: pobierz dane prognozy do planowania budżetu</li>
+                </ol>
+
+                <h3>Formuła ACOS:</h3>
+                <div class="formula-box">
+                    <p><strong>ACOS = Ad Spend / Ad Sales</strong></p>
+                    <p><strong>ACOS = (Bid × Clicks) / [(Impressions × CTR%) × CVR% × AOV]</strong></p>
+                    <small>Zbalansuj koszty reklamy z marżami zysku używając szczegółowych metryk wydajności.</small>
                 </div>
             </div>
         </div>

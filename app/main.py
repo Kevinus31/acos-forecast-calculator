@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 import os
-from .utils import calculate_acos, calculate_forecast_from_metrics
+from .utils import calculate_acos, calculate_forecast_from_metrics, generate_export_data, get_eur_rate_from_nbp
+import json
 
 # Inicjalizacja aplikacji FastAPI
 app = FastAPI(title="ACOS Forecast Calculator", description="Kalkulator prognoz ACOS")
@@ -114,6 +115,48 @@ async def upload_file(
         "request": request,
         "success": success_message
     })
+
+@app.post("/export-results")
+async def export_results(
+    request: Request,
+    gross_margin: float = Form(...),
+    target_aov: float = Form(...),
+    target_ctr: float = Form(...),
+    target_cpc: float = Form(...),
+    target_cvr: float = Form(...),
+    impressions: int = Form(...)
+):
+    """Endpoint do eksportu wyników obliczeń w formacie JSON"""
+    
+    # Oblicz wyniki
+    results = calculate_forecast_from_metrics(
+        gross_margin, target_aov, target_ctr, target_cpc, target_cvr, impressions
+    )
+    
+    # Wygeneruj dane do eksportu
+    export_data = generate_export_data(results)
+    
+    # Zwróć dane JSON do pobrania
+    from fastapi.responses import JSONResponse
+    
+    return JSONResponse(
+        content=export_data,
+        headers={
+            "Content-Disposition": "attachment; filename=acos_forecast_results.json",
+            "Content-Type": "application/json"
+        }
+    )
+
+@app.get("/currency-info")
+async def get_currency_info():
+    """Endpoint do pobierania informacji o kursie EUR/PLN"""
+    eur_rate = get_eur_rate_from_nbp()
+    return {
+        "currency": "EUR",
+        "eur_pln_rate": eur_rate,
+        "source": "NBP API",
+        "last_updated": "cache"
+    }
 
 @app.get("/health")
 async def health_check():

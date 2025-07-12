@@ -340,7 +340,36 @@ input[type="range"]::-moz-range-thumb {
     padding-bottom: 10px;
 }
 
-/* Siatka metryk */
+/* Forecast Results Header */
+.forecast-results-header {
+    margin: 30px 0 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.forecast-results-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.currency-info {
+    margin-top: 10px;
+    opacity: 0.9;
+}
+
+/* Forecast Grid - layout jak na screenshocie */
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 30px 0;
+}
+
+/* Siatka metryk - stary styl dla zgodności */
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -386,9 +415,133 @@ input[type="range"]::-moz-range-thumb {
     color: #667eea;
 }
 
+.metric-value.blue {
+    color: #4299e1;
+}
+
+.metric-value.red {
+    color: #e53e3e;
+}
+
 .metric-card small {
     color: #718096;
     font-size: 0.9rem;
+}
+
+/* Ikony w kartach metryk */
+.metric-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 1.2rem;
+    opacity: 0.7;
+}
+
+/* Style dla konkretnych kart zgodnie ze screenshotem */
+.projected-sales {
+    background: linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%);
+    border-left: 4px solid #4299e1;
+}
+
+.projected-spend {
+    background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
+    border-left: 4px solid #e53e3e;
+}
+
+.expected-acos {
+    background: linear-gradient(135deg, #fff7e6 0%, #ffeacc 100%);
+    border-left: 4px solid #f6ad55;
+}
+
+.profit-per-sale {
+    background: linear-gradient(135deg, #e6ffe6 0%, #ccffcc 100%);
+    border-left: 4px solid #38a169;
+}
+
+.total-profit {
+    background: linear-gradient(135deg, #f0e6ff 0%, #e0ccff 100%);
+    border-left: 4px solid #9f7aea;
+}
+
+/* Ostrzeżenie o nierentowności */
+.unprofitable-warning {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    margin: 20px 0;
+    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+    border: 2px solid #e53e3e;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.2);
+}
+
+.warning-icon {
+    font-size: 2rem;
+    margin-right: 15px;
+}
+
+.warning-content h3 {
+    color: #c53030;
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+}
+
+.warning-content p {
+    color: #742a2a;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Sekcja eksportu */
+.export-section {
+    background: #f8fafc;
+    padding: 25px;
+    margin: 30px 0;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.export-section h3 {
+    color: #2d3748;
+    margin-bottom: 15px;
+}
+
+.btn-export {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+}
+
+/* Formula box */
+.formula-box {
+    background: #edf2f7;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    margin: 15px 0;
+}
+
+.formula-box p {
+    margin: 8px 0;
+    font-family: 'Courier New', monospace;
+    color: #2d3748;
+}
+
+.formula-box small {
+    color: #718096;
+    font-style: italic;
 }
 
 /* Sekcja podsumowania */
@@ -536,6 +689,30 @@ footer {
         grid-template-columns: 1fr;
     }
     
+    .forecast-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .forecast-results-header {
+        padding: 15px;
+    }
+    
+    .forecast-results-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .unprofitable-warning {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .warning-icon {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
     .metric-value {
         font-size: 1.5rem;
     }
@@ -594,10 +771,27 @@ footer {
     
     .metric-card {
         padding: 15px;
+        position: relative;
     }
     
     .metric-value {
         font-size: 1.3rem;
+    }
+    
+    .forecast-results-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .export-section {
+        padding: 15px;
+    }
+    
+    .formula-box {
+        padding: 15px;
+    }
+    
+    .formula-box p {
+        font-size: 0.9rem;
     }
     
     .btn {
