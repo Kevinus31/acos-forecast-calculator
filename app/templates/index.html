@@ -223,6 +223,7 @@
                     <div class="metric-value blue">
                         €{{ results.projected_sales|int }}
                     </div>
+                    <div class="metric-pln">{{ results.projected_sales_pln|int }} PLN</div>
                     <div class="metric-icon">📈</div>
                 </div>
 
@@ -231,6 +232,7 @@
                     <div class="metric-value red">
                         €{{ results.projected_spend|int }}
                     </div>
+                    <div class="metric-pln">{{ results.projected_spend_pln|int }} PLN</div>
                     <div class="metric-icon">💰</div>
                 </div>
 
@@ -257,6 +259,7 @@
                     <div class="metric-value {{ 'profitable' if results.profit_per_sale > 0 else 'unprofitable' }}">
                         €{{ results.profit_per_sale|int }}
                     </div>
+                    <div class="metric-pln">{{ results.profit_per_sale_pln|int }} PLN</div>
                     <div class="metric-icon">💸</div>
                 </div>
 
@@ -265,6 +268,7 @@
                     <div class="metric-value {{ 'profitable' if results.profit > 0 else 'unprofitable' }}">
                         €{{ results.profit|int }}
                     </div>
+                    <div class="metric-pln">{{ results.profit_pln|int }} PLN</div>
                     <div class="metric-icon">💵</div>
                 </div>
 
@@ -289,6 +293,7 @@
                     <div class="metric-value neutral">
                         €{{ results.projected_spend|int }}
                     </div>
+                    <div class="metric-pln">{{ results.projected_spend_pln|int }} PLN</div>
                 </div>
 
                 <div class="metric-card break-even-acos">
@@ -332,11 +337,11 @@
                 <div class="summary-grid">
                     <div class="summary-item">
                         <span class="label">Prognozowana sprzedaż:</span>
-                        <span class="value">€{{ results.projected_sales|int }}</span>
+                        <span class="value">€{{ results.projected_sales|int }}<small> ({{ results.projected_sales_pln|int }} PLN)</small></span>
                     </div>
                     <div class="summary-item">
                         <span class="label">Wydatki na reklamę:</span>
-                        <span class="value">€{{ results.projected_spend|int }}</span>
+                        <span class="value">€{{ results.projected_spend|int }}<small> ({{ results.projected_spend_pln|int }} PLN)</small></span>
                     </div>
                     <div class="summary-item">
                         <span class="label">Marża brutto:</span>

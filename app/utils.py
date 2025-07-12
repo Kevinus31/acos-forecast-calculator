@@ -197,6 +197,14 @@ def calculate_forecast_from_metrics(
     # Pobierz aktualny kurs EUR/PLN dla informacji
     eur_rate = get_eur_rate_from_nbp()
     
+    # Przeliczenia na PLN dla wyświetlania
+    projected_sales_pln = round(ad_sales * eur_rate, 0)
+    projected_spend_pln = round(ad_spend * eur_rate, 0)
+    profit_pln = round(total_profit * eur_rate, 0)
+    profit_per_sale_pln = round(profit_per_sale * eur_rate, 0)
+    target_aov_pln = round(target_aov * eur_rate, 0)
+    target_cpc_pln = round(target_cpc * eur_rate, 2)
+    
     return {
         # Wskaźniki podstawowe
         "acos": round(acos, 0),  # Zaokrąglenie do całości jak na screenshocie
@@ -214,6 +222,14 @@ def calculate_forecast_from_metrics(
         "orders": round(orders, 0),  # Projected Orders (zamiast conversions)
         "projected_sales": round(ad_sales, 0),  # Projected Sales
         "projected_spend": round(ad_spend, 0),  # Projected Spend
+        
+        # Wartości w PLN dla wyświetlania
+        "projected_sales_pln": projected_sales_pln,
+        "projected_spend_pln": projected_spend_pln,
+        "profit_pln": profit_pln,
+        "profit_per_sale_pln": profit_per_sale_pln,
+        "target_aov_pln": target_aov_pln,
+        "target_cpc_pln": target_cpc_pln,
         
         # Parametry wejściowe
         "gross_margin": gross_margin,

@@ -736,8 +736,17 @@ input[type="range"]::-moz-range-thumb:hover {
     font-family: var(--font-family-heading);
     font-size: 1.25rem;
     font-weight: 800;
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
     line-height: 1;
+}
+
+.metric-pln {
+    font-family: var(--font-family-base);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+    opacity: 0.8;
 }
 
 .metric-value.profitable {
@@ -1133,6 +1142,10 @@ footer {
         font-size: 1rem;
     }
 
+    .metric-pln {
+        font-size: 0.6rem;
+    }
+
     .unprofitable-warning {
         flex-direction: column;
         text-align: center;
@@ -1217,6 +1230,10 @@ footer {
 
     .metric-value {
         font-size: 0.9rem;
+    }
+
+    .metric-pln {
+        font-size: 0.55rem;
     }
 
     .forecast-results-header h2 {
