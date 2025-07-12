@@ -86,7 +86,6 @@ body {
 
 /* Header */
 header {
-    text-align: center;
     margin-bottom: var(--spacing-2xl);
     padding: var(--spacing-2xl) var(--spacing-xl);
     background: var(--primary-gradient);
@@ -113,22 +112,109 @@ header::before {
     100% { transform: translateX(100%); }
 }
 
-header h1 {
+/* Header Brand Section */
+.header-brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+    z-index: 1;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.app-logo {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-family-heading);
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-logo::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+    animation: logoShimmer 2s infinite;
+}
+
+@keyframes logoShimmer {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.brand-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.brand-name {
+    font-family: var(--font-family-heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-white);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.creator-info {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.tech-info {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    font-style: italic;
+}
+
+/* Header Content */
+.header-content {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.header-content h1 {
     font-family: var(--font-family-heading);
     font-size: clamp(2rem, 4vw, 3rem);
     font-weight: 800;
     margin-bottom: var(--spacing-md);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: relative;
-    z-index: 1;
 }
 
-header p {
+.header-content p {
     font-size: clamp(1rem, 2vw, 1.25rem);
     font-weight: 400;
     opacity: 0.95;
-    position: relative;
-    z-index: 1;
 }
 
 /* Alert Styles */
@@ -1010,11 +1096,36 @@ footer {
         margin-bottom: var(--spacing-xl);
     }
 
-    header h1 {
+    .logo-container {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+        padding: var(--spacing-lg);
+    }
+
+    .app-logo {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+
+    .brand-name {
+        font-size: 1rem;
+    }
+
+    .creator-info {
+        font-size: 0.8rem;
+    }
+
+    .tech-info {
+        font-size: 0.7rem;
+    }
+
+    .header-content h1 {
         font-size: 2rem;
     }
 
-    header p {
+    .header-content p {
         font-size: 1rem;
     }
 
@@ -1082,7 +1193,31 @@ footer {
         padding: var(--spacing-lg);
     }
 
-    header h1 {
+    .logo-container {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+
+    .app-logo {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .brand-name {
+        font-size: 0.9rem;
+    }
+
+    .creator-info {
+        font-size: 0.75rem;
+    }
+
+    .tech-info {
+        font-size: 0.65rem;
+    }
+
+    .header-content h1 {
         font-size: 1.75rem;
     }
 
