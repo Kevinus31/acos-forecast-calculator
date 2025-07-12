@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACOS Forecast Calculator</title>
+    <title>ACOS Forecast Calculator - Nowoczesny kalkulator rentowności kampanii</title>
+    <meta name="description" content="Profesjonalny kalkulator ACOS do analizy rentowności kampanii reklamowych z integracją NBP API i przeliczaniem w czasie rzeczywistym">
+    <meta name="keywords" content="ACOS, kalkulator, rentowność, kampanie reklamowe, ROI, Amazon, PPC">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>ACOS Forecast Calculator</h1>
-            <p>Kalkulator prognoz rentowności kampanii reklamowych</p>
+            <p>Profesjonalny kalkulator prognoz rentowności kampanii reklamowych</p>
         </header>
 
         <!-- Komunikaty błędów i sukcesów -->
@@ -27,28 +32,29 @@
         {% endif %}
 
         <!-- Wybór metody wprowadzania danych -->
-        <div class="input-method-section">
+        <section class="input-method-section">
             <h2>1. Metoda wprowadzania danych</h2>
+            <p>Wybierz sposób wprowadzenia danych do kalkulatora ACOS</p>
             <div class="method-selector">
-                <div class="method-option" id="manual-method">
+                <article class="method-option" id="manual-method">
                     <div class="method-icon">⚙️</div>
                     <h3>Manual Inputs</h3>
-                    <p>Wprowadź docelowe wskaźniki kampanii używając suwaków i pól</p>
-                    <button type="button" class="btn btn-primary" onclick="selectMethod('manual')">Wybierz</button>
-                </div>
-                <div class="method-option" id="upload-method">
+                    <p>Wprowadź docelowe wskaźniki kampanii używając interaktywnych suwaków i pól numerycznych</p>
+                    <button type="button" class="btn btn-primary" onclick="selectMethod('manual')">Wybierz metodę</button>
+                </article>
+                <article class="method-option" id="upload-method">
                     <div class="method-icon">📤</div>
                     <h3>Bulk Operations Upload</h3>
-                    <p>Prześlij raport z danymi kampanii aby wstępnie wypełnić metryki</p>
-                    <button type="button" class="btn btn-secondary" onclick="selectMethod('upload')">Wybierz</button>
-                </div>
+                    <p>Prześlij raport z danymi kampanii aby automatycznie wypełnić metryki prognozy</p>
+                    <button type="button" class="btn btn-secondary" onclick="selectMethod('upload')">Wybierz metodę</button>
+                </article>
             </div>
-        </div>
+        </section>
 
         <!-- Formularz z suwakami dla zaawansowanych metryk -->
-        <div class="form-section forecast-variables-section" id="forecast-form" style="display: none;">
+        <section class="form-section forecast-variables-section" id="forecast-form" style="display: none;">
             <h2>2. Zmienne prognozy</h2>
-            <p>Wprowadź docelowe wskaźniki kampanii ręcznie lub użyj suwaków aby dostosować wartości.</p>
+            <p>Wprowadź docelowe wskaźniki kampanii ręcznie lub użyj interaktywnych suwaków aby dostosować wartości. Wyniki przeliczają się automatycznie w czasie rzeczywistym.</p>
             
             <form method="POST" action="/calculate-forecast" class="forecast-form">
                 <div class="variables-grid">
@@ -139,10 +145,10 @@
 
                 <button type="submit" class="btn btn-primary">Oblicz prognozę</button>
             </form>
-        </div>
+        </section>
 
         <!-- Prosty formularz do obliczeń (ukryty domyślnie) -->
-        <div class="form-section" id="simple-form" style="display: none;">
+        <section class="form-section" id="simple-form" style="display: none;">
             <h2>Wprowadź dane kampanii</h2>
             <form method="POST" action="/calculate" class="calculation-form">
                 <div class="form-group">
@@ -168,10 +174,10 @@
 
                 <button type="submit" class="btn btn-primary">Oblicz ACOS</button>
             </form>
-        </div>
+        </section>
 
         <!-- Upload pliku -->
-        <div class="form-section">
+        <section class="form-section">
             <h2>Import danych z pliku</h2>
             <form method="POST" action="/upload" enctype="multipart/form-data" class="upload-form">
                 <div class="form-group">
@@ -181,11 +187,11 @@
                 </div>
                 <button type="submit" class="btn btn-secondary">Prześlij plik</button>
             </form>
-        </div>
+        </section>
 
         <!-- Wyniki obliczeń -->
         {% if results %}
-        <div class="results-section">
+        <section class="results-section">
             <h2>Wyniki analizy</h2>
             
             <!-- Komunikat o rentowności -->
@@ -200,7 +206,7 @@
                 <h2>3. Forecast Results</h2>
                 {% if results.currency_info %}
                 <div class="currency-info">
-                    <small>{{ results.currency_info }}</small>
+                    <small>💱 {{ results.currency_info }}</small>
                 </div>
                 {% endif %}
             </div>
@@ -333,45 +339,47 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
         {% endif %}
 
         <!-- Informacje o narzędziu -->
-        <div class="info-section">
-            <h2>ACOS Forecast Calculator</h2>
+        <section class="info-section">
+            <h2>📊 ACOS Forecast Calculator</h2>
             <div class="tool-description">
-                <h3>Co robi to narzędzie?</h3>
-                <p>Oblicza i prognozuje Advertising Cost of Sale (ACOS) aby zoptymalizować rentowność kampanii i alokację budżetu. Przewiduje ACOS na podstawie metryk CTR, CVR, AOV i CPC z szczegółową analizą zysku.</p>
+                <h3>🎯 Co robi to narzędzie?</h3>
+                <p>Oblicza i prognozuje Advertising Cost of Sale (ACOS) aby zoptymalizować rentowność kampanii i alokację budżetu. Przewiduje ACOS na podstawie metryk CTR, CVR, AOV i CPC z szczegółową analizą zysku w czasie rzeczywistym.</p>
                 
-                <h3>Kluczowe funkcje:</h3>
+                <h3>⚡ Kluczowe funkcje:</h3>
                 <ul>
                     <li><strong>Prognozowanie ACOS:</strong> Przewiduje koszt reklamy względem sprzedaży na podstawie metryk wydajności</li>
                     <li><strong>Analiza zysku:</strong> Oblicza oczekiwany zysk na sprzedaż po kosztach reklamy</li>
                     <li><strong>Ustawianie celów:</strong> Optymalizuje CTR, CVR, AOV i CPC dla rentowności</li>
                     <li><strong>Planowanie budżetu:</strong> Planuje wydatki na reklamę na podstawie oczekiwanej wydajności</li>
+                    <li><strong>Przeliczanie w czasie rzeczywistym:</strong> Automatyczne aktualizowanie wyników przy zmianie parametrów</li>
+                    <li><strong>Integracja z NBP:</strong> Aktualny kurs EUR/PLN z Narodowego Banku Polskiego</li>
                 </ul>
 
-                <h3>Jak używać tego narzędzia:</h3>
+                <h3>🚀 Jak używać tego narzędzia:</h3>
                 <ol>
                     <li>Wybierz metodę wprowadzania danych: prześlij plik operacji hurtowych lub użyj ręcznych danych</li>
-                    <li>Ustaw zmienne: skonfiguruj marżę brutto, CTR, CVR, AOV i cele CPC</li>
-                    <li>Przejrzyj prognozę: analizuj oczekiwane projekcje ACOS i zysku</li>
+                    <li>Ustaw zmienne: skonfiguruj marżę brutto, CTR, CVR, AOV i cele CPC używając suwaków</li>
+                    <li>Przejrzyj prognozę: analizuj oczekiwane projekcje ACOS i zysku w czasie rzeczywistym</li>
                     <li>Dostosuj cele: dostrajaj metryki aby zoptymalizować rentowność</li>
                     <li>Eksportuj wyniki: pobierz dane prognozy do planowania budżetu</li>
                 </ol>
 
-                <h3>Formuła ACOS:</h3>
+                <h3>🔬 Formuła ACOS:</h3>
                 <div class="formula-box">
                     <p><strong>ACOS = Ad Spend / Ad Sales</strong></p>
                     <p><strong>ACOS = (Bid × Clicks) / [(Impressions × CTR%) × CVR% × AOV]</strong></p>
                     <small>Zbalansuj koszty reklamy z marżami zysku używając szczegółowych metryk wydajności.</small>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 
     <footer>
-        <p>&copy; 2024 ACOS Forecast Calculator. Prosta analiza rentowności kampanii reklamowych.</p>
+        <p>&copy; 2024 ACOS Forecast Calculator. Profesjonalny kalkulator analizy rentowności kampanii reklamowych z integracją NBP API.</p>
     </footer>
 
     <script>
