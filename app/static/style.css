@@ -593,6 +593,17 @@ input[type="range"]::-moz-range-thumb:hover {
     box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
 }
 
+.btn-success {
+    background: var(--success-gradient);
+    color: var(--text-white);
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(79, 172, 254, 0.4);
+}
+
 /* Real-time Info */
 .real-time-info {
     margin-top: var(--spacing-xl);
@@ -686,6 +697,31 @@ input[type="range"]::-moz-range-thumb:hover {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: var(--spacing-lg);
     margin: var(--spacing-2xl) 0;
+}
+
+/* Budget Grid */
+.budget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--spacing-lg);
+    margin: var(--spacing-2xl) 0;
+}
+
+/* Budget Results Header */
+.budget-results-header {
+    margin-bottom: var(--spacing-2xl);
+    text-align: center;
+}
+
+.budget-results-header h2 {
+    font-family: var(--font-family-heading);
+    font-size: 2.25rem;
+    font-weight: 800;
+    background: var(--success-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--spacing-md);
 }
 
 /* Metric Cards */

@@ -263,6 +263,95 @@ def calculate_forecast_from_metrics(
         "currency_info": f"Kurs EUR/PLN: {eur_rate:.4f} (NBP)"
     }
 
+def calculate_budget_from_tacos(
+    target_sales: float,
+    target_tacos: float,
+    gross_margin: float,
+    currency: str = "EUR"
+) -> Dict[str, Any]:
+    """
+    Oblicza budżet marketingowy na podstawie zakładanego TACOS (Total Advertising Cost of Sales).
+    TACOS = (Wydatki na marketing / Wartość sprzedaży) * 100
+    
+    Args:
+        target_sales (float): Docelowa wartość sprzedaży w EUR
+        target_tacos (float): Zakładany TACOS w procentach
+        gross_margin (float): Marża brutto w procentach
+        currency (str): Waluta do wyświetlania (EUR)
+    
+    Returns:
+        Dict[str, Any]: Słownik z obliczonymi wskaźnikami budżetu
+    """
+    
+    # Obliczenie budżetu marketingowego na podstawie TACOS
+    # TACOS = (Marketing Spend / Sales) * 100
+    # Marketing Spend = (TACOS * Sales) / 100
+    marketing_budget = (target_tacos * target_sales) / 100
+    
+    # Obliczenie zysku brutto ze sprzedaży
+    gross_profit = target_sales * (gross_margin / 100)
+    
+    # Obliczenie zysku netto po odjęciu kosztów marketingowych
+    net_profit = gross_profit - marketing_budget
+    
+    # Obliczenie ROI
+    roi = ((target_sales - marketing_budget) / marketing_budget) * 100 if marketing_budget > 0 else 0
+    
+    # Sprawdzenie rentowności
+    is_profitable = target_tacos <= gross_margin if gross_margin > 0 else False
+    
+    # Przygotowanie komunikatów rentowności
+    profitability_message = ""
+    if target_tacos > 0:
+        if not is_profitable:
+            profitability_message = (
+                f"⚠️ UWAGA: Zakładany TACOS {target_tacos:.1f}% przekracza marżę {gross_margin:.1f}%. "
+                f"Kampania może być nierentowna przy takim poziomie wydatków marketingowych."
+            )
+        else:
+            profitability_message = f"✅ Rentowna kampania: TACOS {target_tacos:.1f}% mieści się w marży {gross_margin:.1f}%"
+    
+    # Określenie statusu rentowności
+    profitability_status = "profitable" if is_profitable else "unprofitable"
+    
+    # Pobierz aktualny kurs EUR/PLN dla informacji
+    eur_rate = get_eur_rate_from_nbp()
+    
+    # Przeliczenia na PLN dla wyświetlania
+    target_sales_pln = round(target_sales * eur_rate, 0)
+    marketing_budget_pln = round(marketing_budget * eur_rate, 0)
+    gross_profit_pln = round(gross_profit * eur_rate, 0)
+    net_profit_pln = round(net_profit * eur_rate, 0)
+    
+    return {
+        # Wskaźniki podstawowe
+        "target_sales": round(target_sales, 0),
+        "target_tacos": round(target_tacos, 1),
+        "marketing_budget": round(marketing_budget, 0),
+        "gross_profit": round(gross_profit, 0),
+        "net_profit": round(net_profit, 0),
+        "roi": round(roi, 1),
+        "gross_margin": gross_margin,
+        "is_profitable": is_profitable,
+        "profitability_message": profitability_message,
+        "profitability_status": profitability_status,
+        
+        # Wartości w PLN dla wyświetlania
+        "target_sales_pln": target_sales_pln,
+        "marketing_budget_pln": marketing_budget_pln,
+        "gross_profit_pln": gross_profit_pln,
+        "net_profit_pln": net_profit_pln,
+        
+        # Dodatkowe wskaźniki
+        "profit_margin": round((net_profit / target_sales) * 100, 1) if target_sales > 0 else 0,
+        "marketing_to_profit_ratio": round((marketing_budget / net_profit) * 100, 1) if net_profit > 0 else 0,
+        
+        # Informacje o walucie
+        "currency": currency,
+        "eur_rate": round(eur_rate, 4),
+        "currency_info": f"Kurs EUR/PLN: {eur_rate:.4f} (NBP)"
+    }
+
 def create_excel_report(results: Dict[str, Any]) -> BytesIO:
     """
     Tworzy profesjonalny raport Excel z wynikami prognoz ACOS.

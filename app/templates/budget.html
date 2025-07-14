@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Budżetu Marketingowego TACOS</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-logo">
+                <img src="https://amzteam.pro/wp-content/uploads/2024/01/AMZ-LOGO-EBISU.svg" alt="AmzTeam.pro Logo" class="logo">
+            </div>
+            <div class="header-content">
+                <h1>Kalkulator Budżetu Marketingowego</h1>
+                <p>Oblicz optymalny budżet marketingowy na podstawie zakładanego TACOS i docelowej sprzedaży</p>
+            </div>
+        </header>
+
+        {% if error %}
+        <div class="alert alert-error">
+            <strong>Błąd:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <section class="form-section budget-calculator-section">
+            <h2>Kalkulator budżetu marketingowego</h2>
+            <p>Użyj suwaków lub wpisz wartości bezpośrednio. Wyniki przeliczają się automatycznie.</p>
+            <form method="POST" action="/calculate-budget" class="budget-form">
+                <div class="variables-grid">
+                    <div class="variable-item">
+                        <label for="target_sales">Docelowa wartość sprzedaży (EUR)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_sales_slider" min="1000" max="100000" step="100" 
+                                   value="{{ target_sales if target_sales else '10000' }}" 
+                                   oninput="updateSliderValue('target_sales', this.value)">
+                            <input type="number" id="target_sales" name="target_sales" step="100" min="1000" max="100000" 
+                                   value="{{ target_sales if target_sales else '10000' }}" 
+                                   onchange="updateSliderFromInput('target_sales', this.value)" required>
+                        </div>
+                        <small>Oczekiwana wartość sprzedaży w EUR</small>
+                    </div>
+
+                    <div class="variable-item">
+                        <label for="target_tacos">Zakładany TACOS (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_tacos_slider" min="5" max="50" step="0.5" 
+                                   value="{{ target_tacos if target_tacos else '15' }}" 
+                                   oninput="updateSliderValue('target_tacos', this.value)">
+                            <input type="number" id="target_tacos" name="target_tacos" step="0.5" min="5" max="50" 
+                                   value="{{ target_tacos if target_tacos else '15' }}" 
+                                   onchange="updateSliderFromInput('target_tacos', this.value)" required>
+                        </div>
+                        <small>Zakładany stosunek wydatków marketingowych do sprzedaży</small>
+                    </div>
+
+                    <div class="variable-item">
+                        <label for="gross_margin">Marża brutto (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="gross_margin_slider" min="10" max="80" step="1" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   oninput="updateSliderValue('gross_margin', this.value)">
+                            <input type="number" id="gross_margin" name="gross_margin" step="1" min="10" max="80" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   onchange="updateSliderFromInput('gross_margin', this.value)" required>
+                        </div>
+                        <small>Marża zysku produktu przed kosztami marketingowymi</small>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Oblicz budżet marketingowy</button>
+            </form>
+        </section>
+
+        {% if results %}
+        <section class="results-section">
+            <h2>Wyniki kalkulatora budżetu</h2>
+            {% if results.profitability_message %}
+            <div class="alert {{ 'alert-success' if results.is_profitable else 'alert-error' }}">
+                {{ results.profitability_message }}
+            </div>
+            {% endif %}
+            <div class="budget-grid">
+                <div class="metric-card target-sales">
+                    <h3>Docelowa sprzedaż</h3>
+                    <div class="metric-value blue">€{{ results.target_sales|int }}</div>
+                    <div class="metric-pln">{{ results.target_sales_pln|int }} PLN</div>
+                    <div class="metric-icon">📈</div>
+                </div>
+                <div class="metric-card marketing-budget">
+                    <h3>Budżet marketingowy</h3>
+                    <div class="metric-value red">€{{ results.marketing_budget|int }}</div>
+                    <div class="metric-pln">{{ results.marketing_budget_pln|int }} PLN</div>
+                    <div class="metric-icon">💰</div>
+                </div>
+                <div class="metric-card target-tacos">
+                    <h3>Zakładany TACOS</h3>
+                    <div class="metric-value neutral">{{ results.target_tacos }}%</div>
+                    <div class="metric-icon">🎯</div>
+                </div>
+                <div class="metric-card roi">
+                    <h3>ROI</h3>
+                    <div class="metric-value {{ 'profitable' if results.roi > 0 else 'unprofitable' }}">{{ results.roi }}%</div>
+                    <div class="metric-icon">📊</div>
+                </div>
+                <div class="metric-card gross-profit">
+                    <h3>Zysk brutto</h3>
+                    <div class="metric-value profitable">€{{ results.gross_profit|int }}</div>
+                    <div class="metric-pln">{{ results.gross_profit_pln|int }} PLN</div>
+                    <div class="metric-icon">💸</div>
+                </div>
+                <div class="metric-card net-profit">
+                    <h3>Zysk netto</h3>
+                    <div class="metric-value {{ 'profitable' if results.net_profit > 0 else 'unprofitable' }}">€{{ results.net_profit|int }}</div>
+                    <div class="metric-pln">{{ results.net_profit_pln|int }} PLN</div>
+                    <div class="metric-icon">💵</div>
+                </div>
+                <div class="metric-card profit-margin">
+                    <h3>Marża zysku</h3>
+                    <div class="metric-value {{ 'profitable' if results.profit_margin > 0 else 'unprofitable' }}">{{ results.profit_margin }}%</div>
+                </div>
+                <div class="metric-card marketing-ratio">
+                    <h3>Stosunek marketing/zysk</h3>
+                    <div class="metric-value neutral">{{ results.marketing_to_profit_ratio }}%</div>
+                </div>
+            </div>
+            <div class="summary-section">
+                <h3>Podsumowanie budżetu</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="label">Docelowa sprzedaż:</span>
+                        <span class="value">€{{ results.target_sales|int }}<small> ({{ results.target_sales_pln|int }} PLN)</small></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Budżet marketingowy:</span>
+                        <span class="value">€{{ results.marketing_budget|int }}<small> ({{ results.marketing_budget_pln|int }} PLN)</small></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Zakładany TACOS:</span>
+                        <span class="value">{{ results.target_tacos }}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Zysk netto:</span>
+                        <span class="value">€{{ results.net_profit|int }}<small> ({{ results.net_profit_pln|int }} PLN)</small></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <script>
+        // Funkcja do aktualizacji wartości pola liczbowego na podstawie suwaka
+        function updateSliderValue(fieldName, value) {
+            const numberInput = document.getElementById(fieldName);
+            const slider = document.getElementById(fieldName + '_slider');
+            
+            numberInput.value = value;
+            
+            // Aktualizacja koloru suwaka na podstawie wartości
+            updateSliderColor(slider, value);
+            
+            // Automatyczne przeliczenie w czasie rzeczywistym z debouncing
+            clearTimeout(window.calculateTimeout);
+            window.calculateTimeout = setTimeout(calculateBudgetRealTime, 300);
+        }
+
+        // Funkcja do aktualizacji suwaka na podstawie pola liczbowego
+        function updateSliderFromInput(fieldName, value) {
+            const slider = document.getElementById(fieldName + '_slider');
+            const numberInput = document.getElementById(fieldName);
+            
+            // Walidacja zakresu
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const numValue = parseFloat(value);
+            
+            if (numValue >= min && numValue <= max) {
+                slider.value = value;
+                updateSliderColor(slider, value);
+                
+                // Automatyczne przeliczenie w czasie rzeczywistym z debouncing
+                clearTimeout(window.calculateTimeout);
+                window.calculateTimeout = setTimeout(calculateBudgetRealTime, 300);
+            } else {
+                // Przywrócenie poprzedniej wartości jeśli poza zakresem
+                numberInput.value = slider.value;
+                alert(`Wartość musi być między ${min} a ${max}`);
+            }
+        }
+
+        // Funkcja do przeliczania budżetu w czasie rzeczywistym
+        async function calculateBudgetRealTime() {
+            // Pobieranie wartości z formularza
+            const target_sales = document.getElementById('target_sales').value;
+            const target_tacos = document.getElementById('target_tacos').value;
+            const gross_margin = document.getElementById('gross_margin').value;
+            
+            // Sprawdzenie czy wszystkie pola są wypełnione
+            if (!target_sales || !target_tacos || !gross_margin) {
+                return;
+            }
+            
+            // Pokazanie wskaźnika ładowania
+            showLoadingIndicator();
+            
+            try {
+                // Przygotowanie danych do wysłania
+                const formData = new FormData();
+                formData.append('target_sales', target_sales);
+                formData.append('target_tacos', target_tacos);
+                formData.append('gross_margin', gross_margin);
+                
+                // Wysłanie zapytania do API
+                const response = await fetch('/calculate-budget', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    updateBudgetResultsSection(html);
+                } else {
+                    console.error('Błąd podczas obliczania:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Błąd podczas obliczania:', error);
+            } finally {
+                hideLoadingIndicator();
+            }
+        }
+
+        // Funkcja do wyświetlania wskaźnika ładowania
+        function showLoadingIndicator() {
+            let loadingDiv = document.getElementById('loading-indicator');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loading-indicator';
+                loadingDiv.innerHTML = '<div class="loading-spinner">🔄 Obliczanie...</div>';
+                loadingDiv.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    z-index: 1000;
+                    font-size: 16px;
+                    font-weight: bold;
+                `;
+                document.body.appendChild(loadingDiv);
+            }
+            loadingDiv.style.display = 'block';
+        }
+
+        // Funkcja do ukrywania wskaźnika ładowania
+        function hideLoadingIndicator() {
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Funkcja do aktualizacji sekcji wyników budżetu
+        function updateBudgetResultsSection(html) {
+            // Parsowanie HTML odpowiedzi
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Znalezienie sekcji wyników w nowym HTML
+            const newResultsSection = doc.querySelector('.results-section');
+            
+            if (newResultsSection) {
+                // Usunięcie starej sekcji wyników jeśli istnieje
+                const oldResultsSection = document.querySelector('.results-section');
+                if (oldResultsSection) {
+                    oldResultsSection.remove();
+                }
+                
+                // Dodanie nowej sekcji wyników
+                const budgetForm = document.querySelector('.budget-form');
+                if (budgetForm) {
+                    budgetForm.parentElement.insertAdjacentElement('afterend', newResultsSection);
+                }
+                
+                // Ponowne dodanie efektów hover do kart metryk
+                addHoverEffectsToMetricCards();
+            }
+        }
+
+        // Funkcja do dodawania efektów hover do kart metryk
+        function addHoverEffectsToMetricCards() {
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        }
+
+        // Funkcja do aktualizacji koloru suwaka
+        function updateSliderColor(slider, value) {
+            const min = parseFloat(slider.min);
+            const max = parseFloat(slider.max);
+            const percentage = ((value - min) / (max - min)) * 100;
+            
+            slider.style.background = `linear-gradient(to right, #667eea 0%, #667eea ${percentage}%, #ddd ${percentage}%, #ddd 100%)`;
+        }
+
+        // Inicjalizacja wszystkich elementów przy ładowaniu strony
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicjalizacja suwaków
+            const sliders = document.querySelectorAll('input[type="range"]');
+            sliders.forEach(slider => {
+                updateSliderColor(slider, slider.value);
+                
+                // Dodanie nasłuchiwania na zmianę wartości
+                slider.addEventListener('input', function() {
+                    updateSliderColor(this, this.value);
+                });
+            });
+            
+            // Dodanie event listenerów do pól input dla automatycznego przeliczania
+            const inputFields = ['target_sales', 'target_tacos', 'gross_margin'];
+            inputFields.forEach(fieldName => {
+                const inputField = document.getElementById(fieldName);
+                if (inputField) {
+                    inputField.addEventListener('input', function() {
+                        // Debouncing - opóźnienie wykonania aby uniknąć zbyt częstych wywołań
+                        clearTimeout(window.calculateTimeout);
+                        window.calculateTimeout = setTimeout(calculateBudgetRealTime, 500);
+                    });
+                }
+            });
+            
+            // Ukrycie przycisku "Oblicz budżet marketingowy" i zmiana na informacyjny tekst
+            const submitButton = document.querySelector('.budget-form button[type="submit"]');
+            if (submitButton) {
+                submitButton.style.display = 'none';
+                
+                // Dodanie informacji o automatycznym przeliczaniu
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'real-time-info';
+                infoDiv.innerHTML = `
+                    <div style="
+                        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                        color: white;
+                        padding: 15px;
+                        border-radius: 10px;
+                        text-align: center;
+                        margin-top: 20px;
+                        font-weight: bold;
+                        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+                    ">
+                        ⚡ Wyniki przeliczają się automatycznie w czasie rzeczywistym!
+                    </div>
+                `;
+                submitButton.parentElement.appendChild(infoDiv);
+            }
+            
+            // Dodanie efektów hover do istniejących kart metryk
+            addHoverEffectsToMetricCards();
+            
+            // Automatyczne przeliczenie przy pierwszym załadowaniu strony
+            setTimeout(calculateBudgetRealTime, 1000);
+        });
+    </script>
+</body>
+</html> 

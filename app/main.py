@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 import os
-from .utils import calculate_acos, calculate_forecast_from_metrics, generate_export_data, get_eur_rate_from_nbp, create_excel_report
+from .utils import calculate_acos, calculate_forecast_from_metrics, calculate_budget_from_tacos, generate_export_data, get_eur_rate_from_nbp, create_excel_report
 import json
 from datetime import datetime
 
@@ -94,6 +94,37 @@ async def calculate_forecast(
         "impressions": impressions
     })
 
+@app.get("/budget", response_class=HTMLResponse)
+async def budget_form(request: Request):
+    """Wyświetla osobny kalkulator budżetu w nowym oknie"""
+    return templates.TemplateResponse("budget.html", {"request": request})
+
+@app.post("/calculate-budget", response_class=HTMLResponse)
+async def calculate_budget(
+    request: Request,
+    target_sales: float = Form(..., description="Docelowa wartość sprzedaży w EUR"),
+    target_tacos: float = Form(..., description="Zakładany TACOS w procentach"),
+    gross_margin: float = Form(..., description="Marża brutto w procentach")
+):
+    """Obliczanie budżetu marketingowego na podstawie zakładanego TACOS"""
+    if any(val < 0 for val in [target_sales, target_tacos, gross_margin]):
+        error_message = "Wszystkie wartości muszą być dodatnie!"
+        return templates.TemplateResponse("budget.html", {
+            "request": request,
+            "error": error_message,
+            "target_sales": target_sales,
+            "target_tacos": target_tacos,
+            "gross_margin": gross_margin
+        })
+    results = calculate_budget_from_tacos(target_sales, target_tacos, gross_margin)
+    return templates.TemplateResponse("budget.html", {
+        "request": request,
+        "results": results,
+        "target_sales": target_sales,
+        "target_tacos": target_tacos,
+        "gross_margin": gross_margin
+    })
+
 @app.post("/upload", response_class=HTMLResponse)
 async def upload_file(
     request: Request,
@@ -101,7 +132,7 @@ async def upload_file(
 ):
     """Szablon funkcji do uploadu pliku CSV z metrykami"""
     
-    if not file.filename.endswith('.csv'):
+    if not file.filename or not file.filename.endswith('.csv'):
         error_message = "Proszę przesłać plik CSV!"
         return templates.TemplateResponse("index.html", {
             "request": request,
