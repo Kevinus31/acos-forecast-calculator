@@ -47,6 +47,12 @@
                     <p>Wprowadź docelowe wskaźniki kampanii używając interaktywnych suwaków i pól numerycznych</p>
                     <button type="button" class="btn btn-primary" onclick="selectMethod('manual')">Wybierz metodę</button>
                 </article>
+                <article class="method-option" id="budget-method">
+                    <div class="method-icon">💰</div>
+                    <h3>Budget Calculator</h3>
+                    <p>Oblicz budżet marketingowy na podstawie zakładanego TACOS i docelowej sprzedaży</p>
+                    <button type="button" class="btn btn-success" id="open-budget-calc">Wybierz metodę</button>
+                </article>
                 <article class="method-option" id="upload-method">
                     <div class="method-icon">📤</div>
                     <h3>Bulk Operations Upload</h3>
@@ -181,6 +187,60 @@
             </form>
         </section>
 
+        <!-- Formularz do obliczania budżetu z TACOS -->
+        <section class="form-section budget-calculator-section" id="budget-form" style="display: none;">
+            <h2>2. Kalkulator budżetu marketingowego</h2>
+            <p>Oblicz optymalny budżet marketingowy na podstawie zakładanego TACOS i docelowej sprzedaży. TACOS to stosunek wydatków na marketing do wartości sprzedaży.</p>
+            
+            <form method="POST" action="/calculate-budget" class="budget-form">
+                <div class="variables-grid">
+                    <!-- Docelowa sprzedaż -->
+                    <div class="variable-item">
+                        <label for="target_sales">Docelowa wartość sprzedaży (EUR)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_sales_slider" min="1000" max="100000" step="100" 
+                                   value="{{ target_sales if target_sales else '10000' }}" 
+                                   oninput="updateSliderValue('target_sales', this.value)">
+                            <input type="number" id="target_sales" name="target_sales" step="100" min="1000" max="100000" 
+                                   value="{{ target_sales if target_sales else '10000' }}" 
+                                   onchange="updateSliderFromInput('target_sales', this.value)" required>
+                        </div>
+                        <small>Oczekiwana wartość sprzedaży w EUR</small>
+                    </div>
+
+                    <!-- Zakładany TACOS -->
+                    <div class="variable-item">
+                        <label for="target_tacos">Zakładany TACOS (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="target_tacos_slider" min="5" max="50" step="0.5" 
+                                   value="{{ target_tacos if target_tacos else '15' }}" 
+                                   oninput="updateSliderValue('target_tacos', this.value)">
+                            <input type="number" id="target_tacos" name="target_tacos" step="0.5" min="5" max="50" 
+                                   value="{{ target_tacos if target_tacos else '15' }}" 
+                                   onchange="updateSliderFromInput('target_tacos', this.value)" required>
+                        </div>
+                        <small>Zakładany stosunek wydatków marketingowych do sprzedaży</small>
+                    </div>
+
+                    <!-- Marża brutto -->
+                    <div class="variable-item">
+                        <label for="budget_gross_margin">Marża brutto (%)</label>
+                        <div class="slider-container">
+                            <input type="range" id="budget_gross_margin_slider" min="10" max="80" step="1" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   oninput="updateSliderValue('budget_gross_margin', this.value)">
+                            <input type="number" id="budget_gross_margin" name="gross_margin" step="1" min="10" max="80" 
+                                   value="{{ gross_margin if gross_margin else '30' }}" 
+                                   onchange="updateSliderFromInput('budget_gross_margin', this.value)" required>
+                        </div>
+                        <small>Marża zysku produktu przed kosztami marketingowymi</small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Oblicz budżet marketingowy</button>
+            </form>
+        </section>
+
         <!-- Upload pliku -->
         <section class="form-section">
             <h2>Import danych z pliku</h2>
@@ -206,6 +266,125 @@
             </div>
             {% endif %}
 
+            {% if results and budget_mode %}
+            <!-- Budget Results - wyniki kalkulatora budżetu -->
+            <div class="budget-results-header">
+                <h2>3. Wyniki kalkulatora budżetu</h2>
+                {% if results.currency_info %}
+                <div class="currency-info">
+                    <small>💱 {{ results.currency_info }}</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="budget-grid">
+                <!-- Górny rząd - główne wyniki -->
+                <div class="metric-card target-sales">
+                    <h3>Docelowa sprzedaż</h3>
+                    <div class="metric-value blue">
+                        €{{ results.target_sales|int }}
+                    </div>
+                    <div class="metric-pln">{{ results.target_sales_pln|int }} PLN</div>
+                    <div class="metric-icon">📈</div>
+                </div>
+
+                <div class="metric-card marketing-budget">
+                    <h3>Budżet marketingowy</h3>
+                    <div class="metric-value red">
+                        €{{ results.marketing_budget|int }}
+                    </div>
+                    <div class="metric-pln">{{ results.marketing_budget_pln|int }} PLN</div>
+                    <div class="metric-icon">💰</div>
+                </div>
+
+                <!-- Drugi rząd -->
+                <div class="metric-card target-tacos">
+                    <h3>Zakładany TACOS</h3>
+                    <div class="metric-value neutral">
+                        {{ results.target_tacos }}%
+                    </div>
+                    <div class="metric-icon">🎯</div>
+                </div>
+
+                <div class="metric-card roi">
+                    <h3>ROI</h3>
+                    <div class="metric-value {{ 'profitable' if results.roi > 0 else 'unprofitable' }}">
+                        {{ results.roi }}%
+                    </div>
+                    <div class="metric-icon">📊</div>
+                </div>
+
+                <!-- Trzeci rząd -->
+                <div class="metric-card gross-profit">
+                    <h3>Zysk brutto</h3>
+                    <div class="metric-value profitable">
+                        €{{ results.gross_profit|int }}
+                    </div>
+                    <div class="metric-pln">{{ results.gross_profit_pln|int }} PLN</div>
+                    <div class="metric-icon">💸</div>
+                </div>
+
+                <div class="metric-card net-profit">
+                    <h3>Zysk netto</h3>
+                    <div class="metric-value {{ 'profitable' if results.net_profit > 0 else 'unprofitable' }}">
+                        €{{ results.net_profit|int }}
+                    </div>
+                    <div class="metric-pln">{{ results.net_profit_pln|int }} PLN</div>
+                    <div class="metric-icon">💵</div>
+                </div>
+
+                <!-- Czwarty rząd - dodatkowe metryki -->
+                <div class="metric-card profit-margin">
+                    <h3>Marża zysku</h3>
+                    <div class="metric-value {{ 'profitable' if results.profit_margin > 0 else 'unprofitable' }}">
+                        {{ results.profit_margin }}%
+                    </div>
+                </div>
+
+                <div class="metric-card marketing-ratio">
+                    <h3>Stosunek marketing/zysk</h3>
+                    <div class="metric-value neutral">
+                        {{ results.marketing_to_profit_ratio }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ostrzeżenie o nierentowności -->
+            {% if not results.is_profitable %}
+            <div class="unprofitable-warning">
+                <div class="warning-icon">⚠️</div>
+                <div class="warning-content">
+                    <h3>Nierentowna kampania</h3>
+                    <p>{{ results.profitability_message }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Podsumowanie budżetu -->
+            <div class="summary-section">
+                <h3>Podsumowanie budżetu</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="label">Docelowa sprzedaż:</span>
+                        <span class="value">€{{ results.target_sales|int }}<small> ({{ results.target_sales_pln|int }} PLN)</small></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Budżet marketingowy:</span>
+                        <span class="value">€{{ results.marketing_budget|int }}<small> ({{ results.marketing_budget_pln|int }} PLN)</small></span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Zakładany TACOS:</span>
+                        <span class="value">{{ results.target_tacos }}%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Zysk netto:</span>
+                        <span class="value">€{{ results.net_profit|int }}<small> ({{ results.net_profit_pln|int }} PLN)</small></span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if results and forecast_mode %}
             <!-- Forecast Results - główne metryki zgodnie ze screenshotem -->
             <div class="forecast-results-header">
                 <h2>3. Forecast Results</h2>
@@ -349,6 +528,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </section>
         {% endif %}
 
@@ -393,24 +573,29 @@
         function selectMethod(method) {
             const forecastForm = document.getElementById('forecast-form');
             const simpleForm = document.getElementById('simple-form');
+            const budgetForm = document.getElementById('budget-form');
             const uploadSection = document.querySelector('.upload-form').parentElement;
+            
+            // Ukryj wszystkie formularze
+            forecastForm.style.display = 'none';
+            simpleForm.style.display = 'none';
+            budgetForm.style.display = 'none';
+            uploadSection.style.display = 'none';
+            
+            // Usuń podświetlenie ze wszystkich opcji
+            document.getElementById('manual-method').classList.remove('selected');
+            document.getElementById('budget-method').classList.remove('selected');
+            document.getElementById('upload-method').classList.remove('selected');
             
             if (method === 'manual') {
                 forecastForm.style.display = 'block';
-                simpleForm.style.display = 'none';
-                uploadSection.style.display = 'none';
-                
-                // Podświetlenie wybranej opcji
                 document.getElementById('manual-method').classList.add('selected');
-                document.getElementById('upload-method').classList.remove('selected');
+            } else if (method === 'budget') {
+                budgetForm.style.display = 'block';
+                document.getElementById('budget-method').classList.add('selected');
             } else if (method === 'upload') {
-                forecastForm.style.display = 'none';
-                simpleForm.style.display = 'none';
                 uploadSection.style.display = 'block';
-                
-                // Podświetlenie wybranej opcji
                 document.getElementById('upload-method').classList.add('selected');
-                document.getElementById('manual-method').classList.remove('selected');
             }
         }
 
@@ -642,6 +827,14 @@
             
             // Automatyczne przeliczenie przy pierwszym załadowaniu strony
             setTimeout(calculateRealTime, 1000);
+
+            // Otwieranie kalkulatora budżetu w nowym oknie
+            const budgetBtn = document.getElementById('open-budget-calc');
+            if (budgetBtn) {
+                budgetBtn.addEventListener('click', function(e) {
+                    window.open('/budget', '_blank', 'width=900,height=900');
+                });
+            }
         });
 
         // Funkcja do formatowania liczb w czasie rzeczywistym
@@ -658,7 +851,7 @@
                 <span class="footer-tech">Powered by Cursor AI</span>
             </div>
             <div class="footer-copyright">
-                <span>© 2024 ACOS Forecast Calculator. Profesjonalny kalkulator analizy rentowności kampanii reklamowych z integracją NBP API.</span>
+                <span>© 2025 ACOS Forecast Calculator. Profesjonalny kalkulator analizy rentowności kampanii reklamowych z integracją NBP API.</span>
             </div>
         </div>
     </footer>
